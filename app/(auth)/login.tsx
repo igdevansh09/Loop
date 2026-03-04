@@ -1,91 +1,66 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
-import { useOAuth } from "@clerk/clerk-expo";
-import * as WebBrowser from "expo-web-browser";
+import { COLORS } from "@/constants/theme";
+import { styles } from "@/styles/auth.styles";
+import { useSSO } from "@clerk/clerk-expo";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 
-// Required for Clerk Expo OAuth to return correctly to the app
-WebBrowser.maybeCompleteAuthSession();
+export default function login() {
+  const { startSSOFlow } = useSSO();
+  const router = useRouter();
 
-export default function LoginScreen() {
-  const { startOAuthFlow } = useOAuth({ strategy: "oauth_github" });
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleGithubLogin = async () => {
+  const handleGoogleSignIn = async () => {
     try {
-      setIsLoading(true);
-      const { createdSessionId, setActive } = await startOAuthFlow();
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: "oauth_github",
+      });
 
-      if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId });
-        // ClerkProvider in your _layout.tsx will detect the session and automatically route to (tabs)
+      if (setActive && createdSessionId) {
+        setActive({ session: createdSessionId });
+        router.replace("/(tabs)");
       }
-    } catch (err) {
-      console.error("OAuth error:", err);
-      // In production, show a Toast/Alert here. For now, check the console.
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error("OAuth error:", error);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>DevSync.</Text>
-      <Text style={styles.subtitle}>Skill-gated matchmaking.</Text>
+      {/* BRAND SECTION */}
+      <View style={styles.brandSection}>
+        <View style={styles.logoContainer}>
+          <Ionicons name="leaf" size={32} color={COLORS.primary} />
+        </View>
+        <Text style={styles.appName}>spotlight</Text>
+        <Text style={styles.tagline}>don't miss anything</Text>
+      </View>
 
-      <TouchableOpacity
-        style={styles.githubButton}
-        onPress={handleGithubLogin}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#000000" />
-        ) : (
-          <Text style={styles.githubButtonText}>Continue with GitHub</Text>
-        )}
-      </TouchableOpacity>
+      {/* ILLUSTRATION */}
+      <View style={styles.illustrationContainer}>
+        <Image
+          source={require("../../assets/images/auth-bg-2.png")}
+          style={styles.illustration}
+          resizeMode="cover"
+        />
+      </View>
+
+      {/* LOGIN SECTION */}
+      <View style={styles.loginSection}>
+        <TouchableOpacity
+          style={styles.googleButton}
+          onPress={handleGoogleSignIn}
+          activeOpacity={0.9}
+        >
+          <View style={styles.googleIconContainer}>
+            <Ionicons name="logo-google" size={20} color={COLORS.surface} />
+          </View>
+          <Text style={styles.googleButtonText}>Continue with Google</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.termsText}>
+          By continuing, you agree to our Terms and Privacy Policy
+        </Text>
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000000", // Pitch black. No gradients. No background images.
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    fontFamily: "JetBrainsMono-Medium", // Using the font already in your assets
-    marginBottom: 8,
-    letterSpacing: -1,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666666",
-    marginBottom: 64,
-  },
-  githubButton: {
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 4, // Sharp corners. Developers like terminals, not bubbles.
-    width: "100%",
-    alignItems: "center",
-  },
-  githubButtonText: {
-    color: "#000000",
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: "JetBrainsMono-Medium",
-  },
-});
