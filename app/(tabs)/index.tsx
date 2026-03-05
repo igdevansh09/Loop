@@ -1,216 +1,273 @@
-import React from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { COLORS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@clerk/clerk-expo";
+import { LinearGradient } from "expo-linear-gradient";
+import NodeCard from "@/components/NodeCard";
 
 export default function FeedScreen() {
-  const { userId: clerkId } = useAuth(); // Get the string ID from Clerk
-  
-  // Bridge the gap: Ask Convex for the internal User ID
-  const currentUser = useQuery(api.users.getCurrentUser, { 
-    clerkId: clerkId ?? undefined 
+  const { userId: clerkId } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const currentUser = useQuery(api.users.getCurrentUser, {
+    clerkId: clerkId ?? undefined,
   });
-  
+
   const requirements = useQuery(api.requirements.getOpenRequirements);
   const applyMutation = useMutation(api.applications.apply);
 
   const handleApply = async (requirementId: any) => {
     if (!currentUser) {
-      Alert.alert("Hold on", "Your profile is still syncing with the database.");
+      Alert.alert(
+        "Hold on",
+        "Your profile is still syncing with the database.",
+      );
       return;
     }
 
     try {
-      // Now you satisfy the exact TypeScript definition
-      await applyMutation({ 
+      await applyMutation({
         requirementId: requirementId,
-        applicantId: currentUser._id, 
+        applicantId: currentUser._id,
       });
-      Alert.alert("Success", "Application submitted securely.");
+      Alert.alert(
+        "✓ Success",
+        "Application submitted securely to the node ledger.",
+      );
     } catch (error: any) {
       Alert.alert("Error", error.message || "Could not apply.");
     }
   };
 
+  // 1. Loading State
   if (requirements === undefined) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Synchronizing nodes...</Text>
       </View>
     );
   }
 
+  // 2. Absolute Empty State (Database has 0 nodes)
   if (requirements.length === 0) {
     return (
       <View style={styles.center}>
-        <Ionicons name="terminal-outline" size={48} color={COLORS.surfaceLight} />
-        <Text style={styles.emptyText}>No open nodes found.</Text>
-        <Text style={styles.emptySubText}>Be the first to create a requirement.</Text>
+        <View style={styles.emptyIcon}>
+          <Ionicons
+            name="terminal-outline"
+            size={64}
+            color={COLORS.surfaceLight}
+          />
+        </View>
+        <Text style={styles.emptyText}>Network Empty</Text>
+        <Text style={styles.emptySubText}>
+          Be the first to initialize a requirement.
+        </Text>
       </View>
     );
   }
 
-  const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.title}>{item.title}</Text>
-        {item.creator.collegeName && (
-          <View style={styles.collegeBadge}>
-            <Ionicons name="school" size={12} color={COLORS.background} />
-            <Text style={styles.collegeText}>{item.creator.collegeName}</Text>
-          </View>
-        )}
-      </View>
-      
-      <Text style={styles.description}>{item.description}</Text>
-      
-      <View style={styles.techStackContainer}>
-        {item.techStack.map((tech: string, index: number) => (
-          <View key={index} style={styles.techBadge}>
-            <Text style={styles.techText}>{tech}</Text>
-          </View>
-        ))}
-      </View>
+  // 3. Client-Side Filtering Engine
+  const filteredRequirements = requirements.filter((req) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
 
-      <TouchableOpacity 
-        style={styles.applyButton} 
-        onPress={() => handleApply(item._id)}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.applyButtonText}>Apply with GitHub Profile</Text>
-        <Ionicons name="arrow-forward" size={16} color={COLORS.background} />
-      </TouchableOpacity>
-    </View>
-  );
+    // Check if query matches title, tech stack, or college name
+    return (
+      req.title.toLowerCase().includes(query) ||
+      req.techStack.some((tech) => tech.toLowerCase().includes(query)) ||
+      (req.creator.collegeName &&
+        req.creator.collegeName.toLowerCase().includes(query))
+    );
+  });
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Active Nodes</Text>
-      </View>
-      <FlatList
-        data={requirements}
-        keyExtractor={(item) => item._id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      <LinearGradient
+        colors={["rgba(234, 179, 8, 0.1)", "transparent"]}
+        style={styles.headerGradient}
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.headerTitle}>Active Nodes</Text>
+            <Text style={styles.headerSubtitle}>
+              {requirements.length} open opportunities
+            </Text>
+          </View>
+          <View style={styles.headerBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>LIVE</Text>
+          </View>
+        </View>
+
+        {/* Search Terminal */}
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color={COLORS.grey}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by title, tech stack, or college..."
+            placeholderTextColor={COLORS.surfaceLight}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              style={styles.clearIcon}
+            >
+              <Ionicons name="close-circle" size={20} color={COLORS.grey} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </LinearGradient>
+
+      {/* 4. Filtered Empty State (Nodes exist, but search yields nothing) */}
+      {filteredRequirements.length === 0 ? (
+        <View style={styles.center}>
+          <Ionicons
+            name="search-outline"
+            size={48}
+            color={COLORS.surfaceLight}
+            style={{ marginBottom: 16 }}
+          />
+          <Text style={styles.emptyText}>No matches found</Text>
+          <Text style={styles.emptySubText}>
+            Try adjusting your search parameters.
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredRequirements}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item, index }) => (
+            <NodeCard
+              item={item}
+              index={index}
+              onApply={() => handleApply(item._id)}
+            />
+          )}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
   center: {
     flex: 1,
     backgroundColor: COLORS.background,
     justifyContent: "center",
     alignItems: "center",
+    padding: 24,
   },
+  loadingText: {
+    color: COLORS.grey,
+    marginTop: 16,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  headerGradient: { paddingTop: 60, paddingBottom: 16 },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.surfaceLight,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "900",
-    color: COLORS.white,
-    fontFamily: "JetBrainsMono-Medium",
-  },
-  listContainer: {
-    padding: 20,
-    paddingBottom: 100, // Space for native tabs
-  },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: COLORS.surfaceLight,
-  },
-  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.white,
-    flex: 1,
-    marginRight: 12,
-  },
-  collegeBadge: {
-    backgroundColor: COLORS.primary,
-    flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  collegeText: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: COLORS.background,
-    marginLeft: 4,
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: "900",
+    color: COLORS.white,
+    letterSpacing: -1,
   },
-  description: {
+  headerSubtitle: {
     fontSize: 14,
     color: COLORS.grey,
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  techStackContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 20,
-    gap: 8,
-  },
-  techBadge: {
-    backgroundColor: COLORS.surfaceLight,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  techText: {
-    color: COLORS.secondary,
-    fontSize: 12,
+    marginTop: 4,
     fontWeight: "600",
-    fontFamily: "JetBrainsMono-Medium",
   },
-  applyButton: {
-    backgroundColor: COLORS.primary,
+  headerBadge: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    borderRadius: 8,
-    gap: 8,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "rgba(234, 179, 8, 0.1)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(234, 179, 8, 0.3)",
   },
-  applyButtonText: {
-    color: COLORS.background,
-    fontWeight: "bold",
-    fontSize: 14,
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.primary,
+  },
+  liveText: {
+    color: COLORS.primary,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  searchContainer: {
+    marginHorizontal: 20,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceLight,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    position: "relative",
+  },
+  searchIcon: {
+    paddingLeft: 16,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    color: COLORS.white,
+    fontSize: 15,
+  },
+  clearIcon: {
+    padding: 14,
+  },
+  listContainer: { padding: 20, paddingBottom: 100 },
+  emptyIcon: {
+    padding: 24,
+    borderRadius: 24,
+    backgroundColor: COLORS.surface,
+    marginBottom: 24,
   },
   emptyText: {
     color: COLORS.white,
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 16,
+    fontSize: 20,
+    fontWeight: "900",
+    marginBottom: 8,
   },
-  emptySubText: {
-    color: COLORS.grey,
-    marginTop: 8,
-  },
+  emptySubText: { color: COLORS.grey, fontSize: 14, textAlign: "center" },
 });

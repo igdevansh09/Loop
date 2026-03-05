@@ -4,34 +4,47 @@ import { v } from "convex/values";
 export default defineSchema({
   users: defineTable({
     clerkId: v.string(),
-    githubUsername: v.string(), // Must be enforced via Clerk OAuth
+    githubUsername: v.string(),
     avatarUrl: v.string(),
-    topLanguages: v.array(v.string()), // To be populated via GitHub API
-    collegeName: v.optional(v.string()), // e.g., "NSUT" - localized trust network
+    topLanguages: v.optional(v.array(v.string())),
+    collegeName: v.optional(v.string()),
     branch: v.optional(v.string()),
-    pushToken: v.optional(v.string()), // For Expo/FCM push notifications
+    pushToken: v.optional(v.string()),
+    topRepos: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          description: v.string(),
+          url: v.string(),
+          stars: v.number(),
+        }),
+      ),
+    ),
   }).index("by_clerkId", ["clerkId"]),
 
   requirements: defineTable({
     creatorId: v.id("users"),
     title: v.string(),
-    description: v.string(),
-    hackathonLink: v.string(), // Verification proof
-    techStack: v.array(v.string()), // e.g., ["Go", "React Native"]
-    commsLink: v.string(), // Hidden Discord/WhatsApp invite
-    status: v.union(v.literal("open"), v.literal("filled")),
+    descriptionBullets: v.array(v.string()),
+    hackathonLink: v.string(),
+    techStack: v.array(v.string()),
+    commsLink: v.string(),
+    capacity: v.number(), // NEW: The explicit team size limit
+    status: v.union(v.literal("open"), v.literal("filled")), // Prevents deletion, maintains history
     createdAt: v.number(),
-  }).index("by_status", ["status"]),
+  })
+    .index("by_creator", ["creatorId"])
+    .index("by_status", ["status"]),
 
   applications: defineTable({
     requirementId: v.id("requirements"),
     applicantId: v.id("users"),
-    aiSummary: v.optional(v.string()), // Gemini's evaluation of the applicant
     status: v.union(
       v.literal("pending"),
       v.literal("accepted"),
       v.literal("rejected"),
     ),
+    aiSummary: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_requirement", ["requirementId"])

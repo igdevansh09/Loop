@@ -35,6 +35,7 @@ const validateForm = (
   hackathonLink: string,
   commsLink: string,
   selectedTags: string[],
+  capacity: string,
 ) => {
   if (!title.trim())
     return { isValid: false, message: "Project title is required" };
@@ -47,6 +48,14 @@ const validateForm = (
       isValid: false,
       message: "Description must be at least 20 characters",
     };
+
+  const capNum = parseInt(capacity, 10);
+  if (isNaN(capNum) || capNum < 1)
+    return {
+      isValid: false,
+      message: "Capacity must be a valid number of 1 or more",
+    };
+
   if (!hackathonLink.trim())
     return { isValid: false, message: "Hackathon link is required" };
   if (!hackathonLink.startsWith("http"))
@@ -98,6 +107,7 @@ export default function CreateNodeScreen() {
   // Form State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [capacity, setCapacity] = useState("1"); // Added capacity state
   const [hackathonLink, setHackathonLink] = useState("");
   const [commsLink, setCommsLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -181,6 +191,7 @@ export default function CreateNodeScreen() {
       hackathonLink,
       commsLink,
       selectedTags,
+      capacity,
     );
     if (!validation.isValid) {
       Alert.alert("Validation Error", validation.message);
@@ -220,10 +231,17 @@ export default function CreateNodeScreen() {
     setIsSubmitting(true);
 
     try {
+      // Parse the description into an array of bullets based on line breaks
+      const descriptionBullets = description
+        .split("\n")
+        .map((bullet) => bullet.trim())
+        .filter((bullet) => bullet.length > 0);
+
       await createRequirement({
         creatorId: activeUserId,
         title: title.trim(),
-        description: description.trim(),
+        descriptionBullets: descriptionBullets, // Matches new schema
+        capacity: parseInt(capacity, 10), // Matches new schema
         hackathonLink: hackathonLink.trim(),
         techStack: selectedTags,
         commsLink: commsLink.trim(),
@@ -232,6 +250,7 @@ export default function CreateNodeScreen() {
       // Success - clear form
       setTitle("");
       setDescription("");
+      setCapacity("1");
       setHackathonLink("");
       setSelectedTags([]);
       setCommsLink("");
@@ -252,6 +271,7 @@ export default function CreateNodeScreen() {
   }, [
     title,
     description,
+    capacity,
     hackathonLink,
     commsLink,
     selectedTags,
@@ -341,7 +361,7 @@ export default function CreateNodeScreen() {
             >
               <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="State your exact constraints (e.g., Need 1 frontend dev, NSUT students only, Hackathon requires 1 female teammate)..."
+                placeholder="Press Enter for bullet points. e.g.&#10;Need 1 frontend dev&#10;NSUT students only"
                 placeholderTextColor={COLORS.surfaceLight}
                 value={description}
                 onChangeText={setDescription}
@@ -355,6 +375,48 @@ export default function CreateNodeScreen() {
                 Minimum 20 characters required
               </Text>
             )}
+            <View style={styles.helperRow}>
+              <Ionicons
+                name="information-circle-outline"
+                size={14}
+                color={COLORS.grey}
+              />
+              <Text style={styles.helperText}>
+                Each new line will be formatted as a bullet point.
+              </Text>
+            </View>
+          </View>
+
+          {/* Capacity */}
+          <View style={styles.formGroup}>
+            <View style={styles.labelRow}>
+              <Ionicons name="people" size={18} color={COLORS.primary} />
+              <Text style={styles.label}>Team Capacity Needed</Text>
+              <View style={styles.requiredBadge}>
+                <Text style={styles.requiredText}>REQUIRED</Text>
+              </View>
+            </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g., 2"
+                placeholderTextColor={COLORS.surfaceLight}
+                value={capacity}
+                onChangeText={setCapacity}
+                keyboardType="number-pad"
+                maxLength={2}
+              />
+            </View>
+            <View style={styles.helperRow}>
+              <Ionicons
+                name="information-circle-outline"
+                size={14}
+                color={COLORS.grey}
+              />
+              <Text style={styles.helperText}>
+                Number of developers you need to hire.
+              </Text>
+            </View>
           </View>
 
           {/* Hackathon Link */}
@@ -487,7 +549,7 @@ export default function CreateNodeScreen() {
             <View style={styles.labelRow}>
               <Ionicons name="lock-closed" size={18} color={COLORS.primary} />
               <Text style={[styles.label, styles.warningLabel]}>
-                Encrypted Comms Link
+                Encrypted Community Link
               </Text>
             </View>
             <View style={styles.inputContainer}>
@@ -554,13 +616,13 @@ export default function CreateNodeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  scrollContent: {paddingHorizontal: 20, paddingBottom: 120 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
   headerGradient: {
     marginHorizontal: -20,
     paddingHorizontal: 20,
     paddingBottom: 24,
     marginBottom: 24,
-    paddingTop: 60
+    paddingTop: 60,
   },
   header: {},
   headerTitle: {

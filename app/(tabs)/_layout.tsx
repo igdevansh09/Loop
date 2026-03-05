@@ -2,7 +2,7 @@ import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { useAuth } from "@clerk/clerk-expo";
 import { COLORS } from "@/constants/theme";
-import { ActivityIndicator, View, DynamicColorIOS } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 export default function TabLayout() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -50,7 +50,7 @@ export default function TabLayout() {
 
       <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Icon sf="person.fill" md="person" />
-        <NativeTabs.Trigger.Label>Dashboard</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
