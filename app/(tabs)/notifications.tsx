@@ -153,25 +153,48 @@ function ApplicantsList({ requirementId, nodeStatus }: { requirementId: any, nod
     <View style={styles.applicantsContainer}>
       {applicants.map((app) => (
         <View key={app._id} style={styles.applicantRow}>
-          <View style={styles.applicantInfo}>
-            <Ionicons name="logo-github" size={16} color={COLORS.white} />
-            <Text style={styles.applicantName}>{app.applicant?.githubUsername || "Unknown"}</Text>
-          </View>
-          
-          {app.status === "pending" && nodeStatus === "open" ? (
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.rejectBtn} onPress={() => handleAction(app._id, "rejected")}>
-                <Text style={styles.rejectBtnText}>Reject</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.acceptBtn} onPress={() => handleAction(app._id, "accepted")}>
-                <Text style={styles.acceptBtnText}>Accept</Text>
-              </TouchableOpacity>
+          <View style={styles.applicantHeader}>
+            <View style={styles.applicantInfo}>
+              <Ionicons name="logo-github" size={16} color={COLORS.white} />
+              <Text style={styles.applicantName}>
+                {app.applicant?.githubUsername || "Unknown"}
+              </Text>
             </View>
-          ) : (
-            <Text style={[styles.statusValue, { color: getStatusColor(app.status), fontSize: 12 }]}>
-              {app.status.toUpperCase()}
+
+            {app.status === "pending" && nodeStatus === "open" ? (
+              <View style={styles.actionButtons}>
+                <TouchableOpacity
+                  style={styles.rejectBtn}
+                  onPress={() => handleAction(app._id, "rejected")}
+                >
+                  <Text style={styles.rejectBtnText}>Reject</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.acceptBtn}
+                  onPress={() => handleAction(app._id, "accepted")}
+                >
+                  <Text style={styles.acceptBtnText}>Accept</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <Text
+                style={[
+                  styles.statusValue,
+                  { color: getStatusColor(app.status), fontSize: 12 },
+                ]}
+              >
+                {app.status.toUpperCase()}
+              </Text>
+            )}
+          </View>
+
+          {/* THE AI SUMMARY INJECTION */}
+          <View style={styles.aiContainer}>
+            <Ionicons name="hardware-chip" size={14} color={COLORS.secondary} />
+            <Text style={styles.aiText}>
+              {app.aiSummary || "Auditing GitHub footprint..."}
             </Text>
-          )}
+          </View>
         </View>
       ))}
     </View>
@@ -198,42 +221,159 @@ const EmptyState = ({ message }: { message: string }) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: COLORS.background },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 },
-  headerTitle: { fontSize: 24, fontWeight: "900", color: COLORS.white, fontFamily: "JetBrainsMono-Medium" },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: COLORS.white,
+    fontFamily: "JetBrainsMono-Medium",
+  },
   loader: { marginTop: 40 },
-  
-  tabContainer: { flexDirection: "row", paddingHorizontal: 20, marginBottom: 16 },
-  tab: { flex: 1, paddingVertical: 12, alignItems: "center", borderBottomWidth: 2, borderBottomColor: COLORS.surfaceLight },
+
+  tabContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.surfaceLight,
+  },
   activeTab: { borderBottomColor: COLORS.primary },
-  tabText: { color: COLORS.grey, fontWeight: "bold", fontFamily: "JetBrainsMono-Medium" },
+  tabText: {
+    color: COLORS.grey,
+    fontWeight: "bold",
+    fontFamily: "JetBrainsMono-Medium",
+  },
   activeTabText: { color: COLORS.primary },
 
   listContainer: { padding: 20, paddingBottom: 100 },
-  card: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.surfaceLight, borderRadius: 8, padding: 16, marginBottom: 16 },
-  nodeTitle: { fontSize: 16, fontWeight: "bold", color: COLORS.white, fontFamily: "JetBrainsMono-Medium", marginBottom: 8 },
-  
+  card: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceLight,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+  },
+  nodeTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.white,
+    fontFamily: "JetBrainsMono-Medium",
+    marginBottom: 8,
+  },
+
   statusRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
   statusLabel: { color: COLORS.grey, fontSize: 14, marginRight: 8 },
-  statusValue: { fontWeight: "bold", fontSize: 14, fontFamily: "JetBrainsMono-Medium" },
-  
-  commsButton: { backgroundColor: COLORS.primary, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, borderRadius: 6, marginTop: 16, gap: 8 },
-  commsButtonText: { color: COLORS.background, fontWeight: "bold", fontSize: 14, fontFamily: "JetBrainsMono-Medium" },
+  statusValue: {
+    fontWeight: "bold",
+    fontSize: 14,
+    fontFamily: "JetBrainsMono-Medium",
+  },
 
-  inboundHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: COLORS.surfaceLight, paddingBottom: 12, marginBottom: 12 },
-  nodeStatus: { fontSize: 12, fontWeight: "bold", fontFamily: "JetBrainsMono-Medium" },
-  
-  noApplicants: { color: COLORS.grey, fontSize: 12, fontStyle: "italic", marginTop: 8 },
+  commsButton: {
+    backgroundColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 6,
+    marginTop: 16,
+    gap: 8,
+  },
+  commsButtonText: {
+    color: COLORS.background,
+    fontWeight: "bold",
+    fontSize: 14,
+    fontFamily: "JetBrainsMono-Medium",
+  },
+
+  inboundHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.surfaceLight,
+    paddingBottom: 12,
+    marginBottom: 12,
+  },
+  nodeStatus: {
+    fontSize: 12,
+    fontWeight: "bold",
+    fontFamily: "JetBrainsMono-Medium",
+  },
+
+  noApplicants: {
+    color: COLORS.grey,
+    fontSize: 12,
+    fontStyle: "italic",
+    marginTop: 8,
+  },
   applicantsContainer: { marginTop: 8 },
-  applicantRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: COLORS.surfaceLight, padding: 12, borderRadius: 6, marginBottom: 8 },
+  applicantRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: COLORS.surfaceLight,
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
   applicantInfo: { flexDirection: "row", alignItems: "center", gap: 8 },
   applicantName: { color: COLORS.white, fontSize: 14, fontWeight: "bold" },
-  
+
   actionButtons: { flexDirection: "row", gap: 8 },
-  rejectBtn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 4, borderWidth: 1, borderColor: "#EF4444" },
+  rejectBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#EF4444",
+  },
   rejectBtnText: { color: "#EF4444", fontSize: 12, fontWeight: "bold" },
-  acceptBtn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 4, backgroundColor: COLORS.primary },
+  acceptBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    backgroundColor: COLORS.primary,
+  },
   acceptBtnText: { color: COLORS.background, fontSize: 12, fontWeight: "bold" },
 
-  emptyText: { color: COLORS.surfaceLight, fontSize: 16, marginTop: 12, fontStyle: "italic" },
+  emptyText: {
+    color: COLORS.surfaceLight,
+    fontSize: 16,
+    marginTop: 12,
+    fontStyle: "italic",
+  },
+  applicantHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  aiContainer: {
+    flexDirection: "row",
+    backgroundColor: COLORS.surface,
+    padding: 10,
+    borderRadius: 6,
+    gap: 8,
+    marginTop: 4,
+  },
+  aiText: {
+    color: COLORS.grey,
+    fontSize: 12,
+    flex: 1,
+    fontFamily: "JetBrainsMono-Medium",
+    lineHeight: 18,
+  },
 });

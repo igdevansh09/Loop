@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { api } from "./_generated/api";
 
 // 1. The Application Action (Candidate Applies)
 export const apply = mutation({
@@ -20,13 +21,28 @@ export const apply = mutation({
     }
 
     // Insert the pending application
-    return await ctx.db.insert("applications", {
+    const applicationId = await ctx.db.insert("applications", {
       requirementId: args.requirementId,
       applicantId: args.applicantId,
       status: "pending",
       createdAt: Date.now(),
-      // aiSummary will be patched in via a Convex action (Gemini) later
+      aiSummary: "Auditing GitHub footprint...", // Temporary state while AI runs
     });
+
+    // Fetch the necessary data for the AI Pipeline
+    const applicant = await ctx.db.get(args.applicantId);
+    const requirement = await ctx.db.get(args.requirementId);
+
+    if (applicant && requirement) {
+      // Fire the AI Action asynchronously. The UI will not freeze waiting for this.
+      await ctx.scheduler.runAfter(0, api.ai.evaluateCandidate, {
+        applicationId: applicationId,
+        githubUsername: applicant.githubUsername,
+        techStack: requirement.techStack,
+      });
+    }
+
+    return applicationId;
   },
 });
 
@@ -112,5 +128,18 @@ export const updateStatus = mutation({
         // FUTURE: Fire push notification to the accepted applicant here
       }
     }
+  },
+});
+
+// 5. System Action: Patches the AI evaluation into the application record
+export const patchAISummary = mutation({
+  args: {
+    applicationId: v.id("applications"),
+    aiSummary: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.applicationId, {
+      aiSummary: args.aiSummary,
+    });
   },
 });
