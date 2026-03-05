@@ -341,7 +341,7 @@ export default function CreateNodeScreen() {
             >
               <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="State your exact constraints and requirements..."
+                placeholder="State your exact constraints (e.g., Need 1 frontend dev, NSUT students only, Hackathon requires 1 female teammate)..."
                 placeholderTextColor={COLORS.surfaceLight}
                 value={description}
                 onChangeText={setDescription}
@@ -554,12 +554,13 @@ export default function CreateNodeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  scrollContent: { padding: 20, paddingTop: 60, paddingBottom: 120 },
+  scrollContent: {paddingHorizontal: 20, paddingBottom: 120 },
   headerGradient: {
     marginHorizontal: -20,
     paddingHorizontal: 20,
     paddingBottom: 24,
     marginBottom: 24,
+    paddingTop: 60
   },
   header: {},
   headerTitle: {
