@@ -6,7 +6,6 @@ Welcome to **Spotlight**!
 In this one‑stop tutorial you’ll build a production‑ready **real‑time social network** that runs on **iOS, Android, and the web**—all with **React Native + Expo**, **Convex**, and **Clerk**.
 
 ---
-EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_cXVhbGl0eS1raWQtNjcuY2xlcmsuYWNjb3VudHMuZGV2JA
 ## 🎯 What You'll Build
 
 This isn’t a UI demo—Spotlight is a **full‑stack, real‑time** social platform.

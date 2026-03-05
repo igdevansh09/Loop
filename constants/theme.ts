@@ -1,9 +1,9 @@
 export const COLORS = {
-  primary: "#4ADE80",
-  secondary: "#2DD4BF",
-  background: "#000000",
-  surface: "#1A1A1A",
-  surfaceLight: "#2A2A2A",
-  white: "#FFFFFF",
-  grey: "#9CA3AF",
+  primary: "#EAB308", // Striking, electric yellow (The lightning)
+  secondary: "#CA8A04", // Deep gold/bronze accent
+  background: "#000000", // Pitch black (The suit)
+  surface: "#111111", // Deep charcoal for cards/modals
+  surfaceLight: "#494646", // Slightly lighter charcoal for borders/dividers
+  white: "#FAFAFA", // Off-white to reduce eye strain against pure black
+  grey: "#9CA3AF", // Neutral grey for secondary text
 } as const;

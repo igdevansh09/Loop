@@ -1,215 +1,215 @@
-import { Loader } from "@/components/Loader";
-import { COLORS } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
-import { Doc } from "@/convex/_generated/dataModel";
-import { styles } from "@/styles/profile.styles";
-import { useAuth } from "@clerk/clerk-expo";
-import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery } from "convex/react";
-import { Image } from "expo-image";
-import { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  FlatList,
-  Modal,
-  TouchableWithoutFeedback,
-  Keyboard,
+import React, { useState, useEffect } from "react";
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  TextInput, 
+  ActivityIndicator, 
+  Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
-  TextInput,
+  ScrollView
 } from "react-native";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useAuth } from "@clerk/clerk-expo";
+import { COLORS } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function Profile() {
-  const { signOut, userId } = useAuth();
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const currentUser = useQuery(api.users.getUserByClerkId, userId ? { clerkId: userId } : "skip");
-
-  const [editedProfile, setEditedProfile] = useState({
-    fullname: currentUser?.fullname || "",
-    bio: currentUser?.bio || "",
-  });
-
-  const [selectedPost, setSelectedPost] = useState<Doc<"posts"> | null>(null);
-  const posts = useQuery(api.posts.getPostsByUser, {});
-
+export default function DashboardScreen() {
+  const { signOut, userId: clerkId } = useAuth();
+  
+  // Database Connections
+  const currentUser = useQuery(api.users.getCurrentUser, { clerkId: clerkId ?? undefined });
   const updateProfile = useMutation(api.users.updateProfile);
 
-  const handleSaveProfile = async () => {
-    await updateProfile(editedProfile);
-    setIsEditModalVisible(false);
+  // Local State for Trust Network
+  const [collegeName, setCollegeName] = useState("");
+  const [branch, setBranch] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Sync local state when database profile loads
+  useEffect(() => {
+    if (currentUser) {
+      setCollegeName(currentUser.collegeName || "");
+      setBranch(currentUser.branch || "");
+    }
+  }, [currentUser]);
+
+  const handleUpdate = async () => {
+    if (!currentUser) return;
+    setIsUpdating(true);
+    try {
+      await updateProfile({
+        userId: currentUser._id,
+        collegeName: collegeName.trim(),
+        branch: branch.trim(),
+      });
+      Alert.alert("Verified", "Your trust network credentials have been updated.");
+    } catch (error: any) {
+      Alert.alert("Update Failed", error.message);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  if (!currentUser || posts === undefined) return <Loader />;
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // AuthObserver in _layout.tsx will instantly catch this and kick the user to the login gate.
+    } catch (error: any) {
+      Alert.alert("Error", "Could not terminate session.");
+    }
+  };
+
+  if (currentUser === undefined) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (currentUser === null) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>Critical Error: Database identity not found.</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.username}>{currentUser.username}</Text>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Terminal State</Text>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerIcon} onPress={() => signOut()}>
-            <Ionicons name="log-out-outline" size={24} color={COLORS.white} />
+
+        {/* Identity Badge */}
+        <View style={styles.badgeContainer}>
+          <Image 
+            source={{ uri: currentUser.avatarUrl || "https://github.com/ghost.png" }} 
+            style={styles.avatar} 
+          />
+          <View style={styles.badgeInfo}>
+            <Text style={styles.username}>{currentUser.githubUsername}</Text>
+            <View style={styles.verifiedRow}>
+              <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
+              <Text style={styles.verifiedText}>GitHub Verified</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* GitHub Tech Stack Summary */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Detected Stack</Text>
+          {currentUser.topLanguages && currentUser.topLanguages.length > 0 ? (
+            <View style={styles.stackContainer}>
+              {currentUser.topLanguages.map((lang: string, idx: number) => (
+                <View key={idx} style={styles.langPill}>
+                  <Text style={styles.langText}>{lang}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.emptyStackText}>
+              Awaiting background sync with GitHub APIs...
+            </Text>
+          )}
+        </View>
+
+        {/* Localized Trust Network Form */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Trust Network Initialization</Text>
+          <Text style={styles.sectionSubtitle}>
+            Providing your college affiliation increases application acceptance rates by 40%.
+          </Text>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Institution (e.g., NSUT)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="University Name"
+              placeholderTextColor={COLORS.surfaceLight}
+              value={collegeName}
+              onChangeText={setCollegeName}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Discipline (e.g., B.Tech Computer Science)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Degree and Branch"
+              placeholderTextColor={COLORS.surfaceLight}
+              value={branch}
+              onChangeText={setBranch}
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.updateButton, isUpdating && styles.disabledButton]} 
+            onPress={handleUpdate}
+            disabled={isUpdating}
+          >
+            {isUpdating ? (
+              <ActivityIndicator color={COLORS.background} size="small" />
+            ) : (
+              <Text style={styles.updateButtonText}>Commit Identity</Text>
+            )}
           </TouchableOpacity>
         </View>
-      </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.profileInfo}>
-          {/* AVATAR & STATS */}
-          <View style={styles.avatarAndStats}>
-            <View style={styles.avatarContainer}>
-              <Image
-                source={currentUser.image}
-                style={styles.avatar}
-                contentFit="cover"
-                transition={200}
-              />
-            </View>
-
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{currentUser.posts}</Text>
-                <Text style={styles.statLabel}>Posts</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{currentUser.followers}</Text>
-                <Text style={styles.statLabel}>Followers</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{currentUser.following}</Text>
-                <Text style={styles.statLabel}>Following</Text>
-              </View>
-            </View>
-          </View>
-
-          <Text style={styles.name}>{currentUser.fullname}</Text>
-          {currentUser.bio && <Text style={styles.bio}>{currentUser.bio}</Text>}
-
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.editButton} onPress={() => setIsEditModalVisible(true)}>
-              <Text style={styles.editButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.shareButton}>
-              <Ionicons name="share-outline" size={20} color={COLORS.white} />
-            </TouchableOpacity>
-          </View>
+        {/* Danger Zone */}
+        <View style={styles.dangerZone}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+            <Ionicons name="log-out" size={20} color="#EF4444" />
+            <Text style={styles.logoutText}>Terminate Session</Text>
+          </TouchableOpacity>
         </View>
-
-        {posts.length === 0 && <NoPostsFound />}
-
-        <FlatList
-          data={posts}
-          numColumns={3}
-          scrollEnabled={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.gridItem} onPress={() => setSelectedPost(item)}>
-              <Image
-                source={item.imageUrl}
-                style={styles.gridImage}
-                contentFit="cover"
-                transition={200}
-              />
-            </TouchableOpacity>
-          )}
-        />
       </ScrollView>
-
-      {/* EDIT PROFILE MODAL */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsEditModalVisible(false)}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.modalContainer}
-          >
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Edit Profile</Text>
-                <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
-                  <Ionicons name="close" size={24} color={COLORS.white} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editedProfile.fullname}
-                  onChangeText={(text) => setEditedProfile((prev) => ({ ...prev, fullname: text }))}
-                  placeholderTextColor={COLORS.grey}
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Bio</Text>
-                <TextInput
-                  style={[styles.input, styles.bioInput]}
-                  value={editedProfile.bio}
-                  onChangeText={(text) => setEditedProfile((prev) => ({ ...prev, bio: text }))}
-                  multiline
-                  numberOfLines={4}
-                  placeholderTextColor={COLORS.grey}
-                />
-              </View>
-
-              <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile}>
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </TouchableWithoutFeedback>
-      </Modal>
-
-      {/* SELECTED IMAGE MODAL */}
-      <Modal
-        visible={!!selectedPost}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setSelectedPost(null)}
-      >
-        <View style={styles.modalBackdrop}>
-          {selectedPost && (
-            <View style={styles.postDetailContainer}>
-              <View style={styles.postDetailHeader}>
-                <TouchableOpacity onPress={() => setSelectedPost(null)}>
-                  <Ionicons name="close" size={24} color={COLORS.white} />
-                </TouchableOpacity>
-              </View>
-
-              <Image
-                source={selectedPost.imageUrl}
-                cachePolicy={"memory-disk"}
-                style={styles.postDetailImage}
-              />
-            </View>
-          )}
-        </View>
-      </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
-function NoPostsFound() {
-  return (
-    <View
-      style={{
-        height: "100%",
-        backgroundColor: COLORS.background,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Ionicons name="images-outline" size={48} color={COLORS.primary} />
-      <Text style={{ fontSize: 20, color: COLORS.white }}>No posts yet</Text>
-    </View>
-  );
-}
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.background },
+  center: { flex: 1, backgroundColor: COLORS.background, justifyContent: "center", alignItems: "center" },
+  scrollContent: { padding: 24, paddingTop: 60, paddingBottom: 100 },
+  header: { marginBottom: 32 },
+  headerTitle: { fontSize: 28, fontWeight: "900", color: COLORS.white, fontFamily: "JetBrainsMono-Medium" },
+  errorText: { color: "#EF4444", fontFamily: "JetBrainsMono-Medium" },
+  
+  badgeContainer: { flexDirection: "row", alignItems: "center", backgroundColor: COLORS.surface, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: COLORS.surfaceLight, marginBottom: 32 },
+  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.surfaceLight, marginRight: 16 },
+  badgeInfo: { flex: 1 },
+  username: { fontSize: 20, fontWeight: "bold", color: COLORS.white, fontFamily: "JetBrainsMono-Medium", marginBottom: 4 },
+  verifiedRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  verifiedText: { color: COLORS.primary, fontSize: 12, fontWeight: "bold" },
+  
+  section: { marginBottom: 32 },
+  sectionTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.white, fontFamily: "JetBrainsMono-Medium", marginBottom: 8 },
+  sectionSubtitle: { fontSize: 14, color: COLORS.grey, marginBottom: 16, lineHeight: 20 },
+  
+  stackContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  langPill: { backgroundColor: COLORS.surfaceLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+  langText: { color: COLORS.secondary, fontSize: 12, fontWeight: "600", fontFamily: "JetBrainsMono-Medium" },
+  emptyStackText: { color: COLORS.grey, fontStyle: "italic", fontSize: 14 },
+
+  formGroup: { marginBottom: 16 },
+  label: { fontSize: 12, fontWeight: "bold", color: COLORS.grey, marginBottom: 8, textTransform: "uppercase" },
+  input: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.surfaceLight, borderRadius: 8, padding: 16, color: COLORS.white, fontSize: 16 },
+  
+  updateButton: { backgroundColor: COLORS.primary, paddingVertical: 16, borderRadius: 8, alignItems: "center", marginTop: 8 },
+  disabledButton: { opacity: 0.5 },
+  updateButtonText: { color: COLORS.background, fontSize: 16, fontWeight: "bold", fontFamily: "JetBrainsMono-Medium" },
+
+  dangerZone: { marginTop: 24, borderTopWidth: 1, borderTopColor: COLORS.surfaceLight, paddingTop: 32 },
+  logoutButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 16, borderRadius: 8, borderWidth: 1, borderColor: "#EF4444", backgroundColor: "rgba(239, 68, 68, 0.1)", gap: 8 },
+  logoutText: { color: "#EF4444", fontSize: 16, fontWeight: "bold", fontFamily: "JetBrainsMono-Medium" },
+});

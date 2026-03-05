@@ -1,59 +1,57 @@
-import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Redirect } from "expo-router";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { useAuth } from "@clerk/clerk-expo";
 import { COLORS } from "@/constants/theme";
+import { ActivityIndicator, View, DynamicColorIOS } from "react-native";
 
 export default function TabLayout() {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: COLORS.background,
+        }}
+      >
+        <ActivityIndicator color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   return (
-    <Tabs
-      screenOptions={{
-        tabBarShowLabel: false,
-        headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.grey,
-        tabBarStyle: {
-          backgroundColor: "black",
-          borderTopWidth: 0,
-          position: "absolute",
-          elevation: 0,
-          height: 40,
-          paddingBottom: 8,
-        },
-      }}
+    <NativeTabs
+      backgroundColor={COLORS.background}
+      iconColor={COLORS.grey}
+      tintColor={COLORS.primary}
+      indicatorColor="transparent"
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          tabBarIcon: ({ size, color }) => <Ionicons name="home" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="bookmarks"
-        options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="bookmark" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="create"
-        options={{
-          tabBarIcon: ({ size }) => (
-            <Ionicons name="add-circle" size={size} color={COLORS.primary} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+      <NativeTabs.Trigger name="index">
+        <NativeTabs.Trigger.Icon sf="terminal.fill" md="terminal" />
+        <NativeTabs.Trigger.Label>Feed</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="create">
+        <NativeTabs.Trigger.Icon sf="plus.circle.fill" md="add_circle" />
+        <NativeTabs.Trigger.Label>Create Node</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="notifications">
+        <NativeTabs.Trigger.Icon sf="bell.fill" md="notifications" />
+        <NativeTabs.Trigger.Label>Ledger</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="profile">
+        <NativeTabs.Trigger.Icon sf="person.fill" md="person" />
+        <NativeTabs.Trigger.Label>Dashboard</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }
