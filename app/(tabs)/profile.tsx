@@ -27,15 +27,20 @@ export default function DashboardScreen() {
   const currentUser = useQuery(api.users.getCurrentUser, {
     clerkId: clerkId ?? undefined,
   });
-  const updateProfile = useMutation(api.users.updateProfile);
-  const deleteAccount = useMutation(api.users.deleteAccount); // The Kill Switch
 
-  const myRequirements = useQuery(api.requirements.getRequirementsByUser, {
-    userId: currentUser?._id ?? ("" as any),
-  });
-  const myApplications = useQuery(api.applications.getMyApplications, {
-    applicantId: currentUser?._id ?? ("" as any),
-  });
+  const updateProfile = useMutation(api.users.updateProfile);
+  const deleteAccount = useMutation(api.users.deleteAccount);
+
+  // FIX: Use "skip" to prevent invalid queries when currentUser is missing
+  const myRequirements = useQuery(
+    api.requirements.getRequirementsByUser,
+    currentUser?._id ? { userId: currentUser._id } : "skip",
+  );
+
+  const myApplications = useQuery(
+    api.applications.getMyApplications,
+    currentUser?._id ? { applicantId: currentUser._id } : "skip",
+  );
 
   const [collegeName, setCollegeName] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);

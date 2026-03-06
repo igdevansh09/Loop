@@ -73,6 +73,10 @@ export default function LoginScreen() {
     ).start();
   }, []);
 
+  if (!isLoaded || isSignedIn) {
+    return null;
+  }
+
   const handleGitHubLogin = useCallback(async () => {
     try {
       setIsAuthenticating(true); // 1. Lock the UI immediately
@@ -98,9 +102,7 @@ export default function LoginScreen() {
     }
   }, [startSSOFlow]);
 
-  if (!isLoaded || isSignedIn) {
-    return <View style={styles.container} />;
-  }
+  
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
