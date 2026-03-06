@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,33 +6,34 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
-import { useAuth, useSSO } from "@clerk/clerk-expo"; // THE UPGRADE
+import { useSSO, useAuth } from "@clerk/clerk-expo";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
-import { useState } from "react"; // Add this to your React imports
-import { ActivityIndicator } from "react-native";
 
-// Required for Expo WebBrowser to handle the OAuth redirect
 WebBrowser.maybeCompleteAuthSession();
 
 const { width } = Dimensions.get("window");
 
 export default function LoginScreen() {
   useWarmUpBrowser();
-  // 1. Initialize the modern SSO engine
   const { startSSOFlow } = useSSO();
   const { isSignedIn, isLoaded } = useAuth();
+
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  // YOUR FIX: Lock the UI if actively authenticating OR already signed in
+  const isRouting = isAuthenticating || isSignedIn;
 
   useEffect(() => {
     Animated.parallel([
@@ -73,16 +74,10 @@ export default function LoginScreen() {
     ).start();
   }, []);
 
-  if (!isLoaded || isSignedIn) {
-    return null;
-  }
-
   const handleGitHubLogin = useCallback(async () => {
     try {
-      setIsAuthenticating(true); // 1. Lock the UI immediately
-
+      setIsAuthenticating(true);
       const redirectUri = Linking.createURL("/", { scheme: "loop" });
-
       const { createdSessionId, setActive } = await startSSOFlow({
         strategy: "oauth_github",
         redirectUrl: redirectUri,
@@ -90,19 +85,15 @@ export default function LoginScreen() {
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
-        // CRITICAL: Do NOT set isAuthenticating to false here.
-        // We let the spinner run until the root layout violently unmounts this screen.
+        // Do NOT set isAuthenticating to false. Let the redirect handle it.
       } else {
-        // If they hit 'Cancel' in the browser, unlock the UI
         setIsAuthenticating(false);
       }
     } catch (err) {
       console.error("OAuth flow failed", err);
-      setIsAuthenticating(false); // Unlock on error
+      setIsAuthenticating(false);
     }
   }, [startSSOFlow]);
-
-  
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
@@ -157,21 +148,6 @@ export default function LoginScreen() {
 
         <Text style={styles.subtitle}>Skill-Gated Matchmaking Engine</Text>
 
-        <View style={styles.featureContainer}>
-          <View style={styles.featurePill}>
-            <Ionicons
-              name="shield-checkmark"
-              size={16}
-              color={COLORS.primary}
-            />
-            <Text style={styles.featureText}>GitHub Verified</Text>
-          </View>
-          <View style={styles.featurePill}>
-            <Ionicons name="flash" size={16} color={COLORS.primary} />
-            <Text style={styles.featureText}>AI-Powered</Text>
-          </View>
-        </View>
-
         <View style={styles.warningCard}>
           <Ionicons name="lock-closed" size={20} color={COLORS.primary} />
           <Text style={styles.warningText}>
@@ -180,17 +156,17 @@ export default function LoginScreen() {
         </View>
 
         <Animated.View
-          style={{ transform: [{ scale: isAuthenticating ? 1 : pulseAnim }] }}
+          style={{ transform: [{ scale: isRouting ? 1 : pulseAnim }] }}
         >
           <TouchableOpacity
             style={styles.authButton}
             onPress={handleGitHubLogin}
             activeOpacity={0.9}
-            disabled={isAuthenticating} // Prevent double-taps
+            disabled={isRouting || !isLoaded}
           >
             <LinearGradient
               colors={
-                isAuthenticating
+                isRouting || !isLoaded
                   ? [COLORS.surfaceLight, COLORS.surfaceLight]
                   : [COLORS.primary, COLORS.secondary]
               }
@@ -198,13 +174,15 @@ export default function LoginScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.buttonGradient}
             >
-              {isAuthenticating ? (
+              {isRouting || !isLoaded ? (
                 <>
                   <ActivityIndicator color={COLORS.primary} size="small" />
                   <Text
                     style={[styles.authButtonText, { color: COLORS.primary }]}
                   >
-                    Establishing Link...
+                    {isSignedIn
+                      ? "Routing to terminal node..."
+                      : "Establishing Link..."}
                   </Text>
                 </>
               ) : (
@@ -227,12 +205,6 @@ export default function LoginScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
-
-        <View style={styles.bottomDecoration}>
-          <View style={styles.decorationLine} />
-          <Text style={styles.decorationText}>Secure • Private • Fast</Text>
-          <View style={styles.decorationLine} />
-        </View>
       </Animated.View>
     </View>
   );
