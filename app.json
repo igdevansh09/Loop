@@ -14,7 +14,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.igdevansh.loop"
     },
     "web": {
       "bundler": "metro",
@@ -35,6 +36,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e74585d2-de91-4e92-9d6f-956d81dcb0cf"
+      }
     }
   }
 }

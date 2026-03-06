@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "610402173272",
+    "project_id": "loop-5d7e2",
+    "storage_bucket": "loop-5d7e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:610402173272:android:333e460f7df4e9e95de52d",
+        "android_client_info": {
+          "package_name": "com.igdevansh.loop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9gxD-QlYfLvyVLdB1PyqOATqbFwc-Huo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -7,29 +7,34 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import { useOAuth } from "@clerk/clerk-expo";
+import { useAuth, useSSO } from "@clerk/clerk-expo"; // THE UPGRADE
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
+import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
+import { useState } from "react"; // Add this to your React imports
+import { ActivityIndicator } from "react-native";
 
 // Required for Expo WebBrowser to handle the OAuth redirect
 WebBrowser.maybeCompleteAuthSession();
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 export default function LoginScreen() {
-  const { startOAuthFlow } = useOAuth({ strategy: "oauth_github" });
+  useWarmUpBrowser();
+  // 1. Initialize the modern SSO engine
+  const { startSSOFlow } = useSSO();
+  const { isSignedIn, isLoaded } = useAuth();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Entrance animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -44,7 +49,6 @@ export default function LoginScreen() {
       }),
     ]).start();
 
-    // Continuous pulse animation for the button
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -60,7 +64,6 @@ export default function LoginScreen() {
       ]),
     ).start();
 
-    // Continuous rotation for the icon
     Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
@@ -72,17 +75,32 @@ export default function LoginScreen() {
 
   const handleGitHubLogin = useCallback(async () => {
     try {
-      const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL("/(tabs)", { scheme: "myapp" }),
+      setIsAuthenticating(true); // 1. Lock the UI immediately
+
+      const redirectUri = Linking.createURL("/", { scheme: "loop" });
+
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: "oauth_github",
+        redirectUrl: redirectUri,
       });
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
+        // CRITICAL: Do NOT set isAuthenticating to false here.
+        // We let the spinner run until the root layout violently unmounts this screen.
+      } else {
+        // If they hit 'Cancel' in the browser, unlock the UI
+        setIsAuthenticating(false);
       }
     } catch (err) {
       console.error("OAuth flow failed", err);
+      setIsAuthenticating(false); // Unlock on error
     }
-  }, [startOAuthFlow]);
+  }, [startSSOFlow]);
+
+  if (!isLoaded || isSignedIn) {
+    return <View style={styles.container} />;
+  }
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
@@ -91,7 +109,6 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Animated background circles */}
       <Animated.View
         style={[
           styles.bgCircle,
@@ -122,20 +139,15 @@ export default function LoginScreen() {
       <Animated.View
         style={[
           styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
+          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
         ]}
       >
-        {/* Logo/Icon with glow effect */}
         <View style={styles.iconContainer}>
           <View style={styles.iconGlow}>
             <Ionicons name="terminal" size={64} color={COLORS.primary} />
           </View>
         </View>
 
-        {/* Title with gradient text effect */}
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Loop</Text>
           <View style={styles.titleUnderline} />
@@ -143,7 +155,6 @@ export default function LoginScreen() {
 
         <Text style={styles.subtitle}>Skill-Gated Matchmaking Engine</Text>
 
-        {/* Feature pills */}
         <View style={styles.featureContainer}>
           <View style={styles.featurePill}>
             <Ionicons
@@ -159,7 +170,6 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        {/* Warning with animated border */}
         <View style={styles.warningCard}>
           <Ionicons name="lock-closed" size={20} color={COLORS.primary} />
           <Text style={styles.warningText}>
@@ -167,35 +177,55 @@ export default function LoginScreen() {
           </Text>
         </View>
 
-        {/* Animated login button */}
-        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        <Animated.View
+          style={{ transform: [{ scale: isAuthenticating ? 1 : pulseAnim }] }}
+        >
           <TouchableOpacity
             style={styles.authButton}
             onPress={handleGitHubLogin}
             activeOpacity={0.9}
+            disabled={isAuthenticating} // Prevent double-taps
           >
             <LinearGradient
-              colors={[COLORS.primary, COLORS.secondary]}
+              colors={
+                isAuthenticating
+                  ? [COLORS.surfaceLight, COLORS.surfaceLight]
+                  : [COLORS.primary, COLORS.secondary]
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.buttonGradient}
             >
-              <Ionicons
-                name="logo-github"
-                size={24}
-                color={COLORS.background}
-              />
-              <Text style={styles.authButtonText}>Continue with GitHub</Text>
-              <Ionicons
-                name="arrow-forward"
-                size={20}
-                color={COLORS.background}
-              />
+              {isAuthenticating ? (
+                <>
+                  <ActivityIndicator color={COLORS.primary} size="small" />
+                  <Text
+                    style={[styles.authButtonText, { color: COLORS.primary }]}
+                  >
+                    Establishing Link...
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons
+                    name="logo-github"
+                    size={24}
+                    color={COLORS.background}
+                  />
+                  <Text style={styles.authButtonText}>
+                    Continue with GitHub
+                  </Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={20}
+                    color={COLORS.background}
+                  />
+                </>
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Bottom decoration */}
         <View style={styles.bottomDecoration}>
           <View style={styles.decorationLine} />
           <Text style={styles.decorationText}>Secure • Private • Fast</Text>
@@ -231,12 +261,8 @@ const styles = StyleSheet.create({
     bottom: -width * 0.4,
     right: -width * 0.3,
   },
-  content: {
-    alignItems: "center",
-  },
-  iconContainer: {
-    marginBottom: 32,
-  },
+  content: { alignItems: "center" },
+  iconContainer: { marginBottom: 32 },
   iconGlow: {
     padding: 24,
     borderRadius: 24,
@@ -247,10 +273,7 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  titleContainer: {
-    alignItems: "center",
-    marginBottom: 12,
-  },
+  titleContainer: { alignItems: "center", marginBottom: 12 },
   title: {
     fontSize: 56,
     fontWeight: "900",
@@ -274,11 +297,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 0.5,
   },
-  featureContainer: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 32,
-  },
+  featureContainer: { flexDirection: "row", gap: 12, marginBottom: 32 },
   featurePill: {
     flexDirection: "row",
     alignItems: "center",
@@ -290,11 +309,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.surfaceLight,
   },
-  featureText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontWeight: "600",
-  },
+  featureText: { color: COLORS.white, fontSize: 12, fontWeight: "600" },
   warningCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -344,11 +359,7 @@ const styles = StyleSheet.create({
     gap: 16,
     marginTop: 48,
   },
-  decorationLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: COLORS.surfaceLight,
-  },
+  decorationLine: { flex: 1, height: 1, backgroundColor: COLORS.surfaceLight },
   decorationText: {
     color: COLORS.surfaceLight,
     fontSize: 11,

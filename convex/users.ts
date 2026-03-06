@@ -110,3 +110,26 @@ export const deleteAccount = mutation({
     await ctx.db.delete(args.userId);
   },
 });
+
+// System Action: Binds the physical device hardware token to the user identity
+export const updatePushToken = mutation({
+  args: {
+    clerkId: v.string(),
+    pushToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find the user by their Clerk authentication ID
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
+      .first();
+
+    // If the user exists and the token is new or changed, patch the record
+    if (user && user.pushToken !== args.pushToken) {
+      await ctx.db.patch(user._id, {
+        pushToken: args.pushToken,
+      });
+      console.log(`Hardware token synced for user: ${user.githubUsername}`);
+    }
+  },
+});

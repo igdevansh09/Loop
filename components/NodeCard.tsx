@@ -114,20 +114,34 @@ export default function NodeCard({
           style={styles.cardAccent}
         />
 
-        {/* TOP HEADER: Only strict project data and constraints go here now */}
+        {/* TOP HEADER: Now configured as a row to hold the Share button */}
         <View style={styles.cardHeader}>
-          <Text style={styles.title} numberOfLines={isExpanded ? undefined : 2}>
-            {item.title}
-          </Text>
+          <View style={{ flex: 1, paddingRight: 16 }}>
+            <Text
+              style={styles.title}
+              numberOfLines={isExpanded ? undefined : 2}
+            >
+              {item.title}
+            </Text>
 
-          <View style={styles.badgeRow}>
-            <View style={styles.capacityBadge}>
-              <Ionicons name="people" size={12} color={COLORS.primary} />
-              <Text style={styles.capacityText}>
-                {item.capacity} Slot{item.capacity > 1 ? "s" : ""} Open
-              </Text>
+            <View style={styles.badgeRow}>
+              <View style={styles.capacityBadge}>
+                <Ionicons name="people" size={12} color={COLORS.primary} />
+                <Text style={styles.capacityText}>
+                  {item.capacity} Slot{item.capacity > 1 ? "s" : ""} Open
+                </Text>
+              </View>
             </View>
           </View>
+
+          {/* Share Button firmly in the top right corner */}
+          <TouchableOpacity
+            style={styles.shareButton}
+            onPress={handleShare}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="share-social" size={18} color={COLORS.primary} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.bulletContainer}>
@@ -177,7 +191,6 @@ export default function NodeCard({
               <Ionicons name="open-outline" size={12} color={COLORS.grey} />
             </TouchableOpacity>
 
-            {/* The College Affiliation is now clearly an attribute of the creator, not a node constraint */}
             {item.creator.collegeName && (
               <View style={styles.collegeContextRow}>
                 <Ionicons name="school" size={12} color={COLORS.grey} />
@@ -213,7 +226,16 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cardAccent: { position: "absolute", top: 0, left: 0, right: 0, height: 100 },
-  cardHeader: { marginBottom: 16, zIndex: 1 },
+
+  // Updated header to flex row
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+    zIndex: 1,
+  },
+
   title: {
     fontSize: 20,
     fontWeight: "900",
@@ -234,7 +256,19 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   capacityText: { fontSize: 11, fontWeight: "800", color: COLORS.primary },
-shareButton: { padding: 10, borderRadius: 8, borderWidth: 1, borderColor: COLORS.primary, backgroundColor: "rgba(234, 179, 8, 0.1)", justifyContent: "center", alignItems: "center" },
+
+  // Share button styled as a distinct icon button
+  shareButton: {
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    backgroundColor: "rgba(234, 179, 8, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+
   bulletContainer: { marginBottom: 20 },
   bulletRow: {
     flexDirection: "row",

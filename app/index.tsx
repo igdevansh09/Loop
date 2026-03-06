@@ -1,16 +1,51 @@
 import { Redirect } from "expo-router";
-import { useEffect } from "react";
-import * as SplashScreen from "expo-splash-screen";
+import { useAuth } from "@clerk/clerk-expo";
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
+import { COLORS } from "@/constants/theme";
 
 export default function Index() {
-  useEffect(() => {
-    // Keep splash screen visible a bit longer for smooth transition
-    const timer = setTimeout(() => {
-      SplashScreen.hideAsync();
-    }, 500);
+  const { isSignedIn, isLoaded } = useAuth();
+  const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
 
-    return () => clearTimeout(timer);
+  useEffect(() => {
+    AsyncStorage.getItem("hasSeenDevSyncOnboarding").then((value) => {
+      setIsFirstLaunch(value !== "true");
+    });
   }, []);
 
+  // Show your terminal loader while calculating the route
+  if (!isLoaded || isFirstLaunch === null) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>
+          Initializing secure connection...
+        </Text>
+      </View>
+    );
+  }
+
+  // The Switchboard
+  if (isFirstLaunch) return <Redirect href="/onboarding" />;
+  if (isSignedIn) return <Redirect href="/(tabs)" />;
   return <Redirect href="/(auth)/login" />;
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    color: COLORS.grey,
+    fontSize: 14,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+});

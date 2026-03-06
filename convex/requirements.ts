@@ -26,7 +26,6 @@ export const create = mutation({
   },
 });
 
-
 // 2. The Feed: Fetch only OPEN requirements and attach creator metadata
 export const getOpenRequirements = query({
   handler: async (ctx) => {
@@ -71,7 +70,6 @@ export const getRequirementsByUser = query({
   },
 });
 
-
 // Add this to the bottom of convex/requirements.ts
 export const deleteRequirement = mutation({
   args: {
@@ -80,7 +78,7 @@ export const deleteRequirement = mutation({
   },
   handler: async (ctx, args) => {
     const requirement = await ctx.db.get(args.requirementId);
-    
+
     if (!requirement) {
       throw new Error("Node not found.");
     }
@@ -92,7 +90,9 @@ export const deleteRequirement = mutation({
     // 1. Wipe all applications tied to this node to prevent orphaned data
     const linkedApplications = await ctx.db
       .query("applications")
-      .withIndex("by_requirement", (q) => q.eq("requirementId", args.requirementId))
+      .withIndex("by_requirement", (q) =>
+        q.eq("requirementId", args.requirementId),
+      )
       .collect();
 
     for (const app of linkedApplications) {
@@ -101,5 +101,18 @@ export const deleteRequirement = mutation({
 
     // 2. Wipe the node itself
     await ctx.db.delete(args.requirementId);
+  },
+});
+
+export const getRequirementById = query({
+  args: { requirementId: v.id("requirements") },
+  handler: async (ctx, args) => {
+    const requirement = await ctx.db.get(args.requirementId);
+    if (!requirement) return null;
+
+    const creator = await ctx.db.get(requirement.creatorId);
+    if (!creator) return null;
+
+    return { ...requirement, creator };
   },
 });

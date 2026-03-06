@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -114,92 +115,103 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Animated background gradient */}
-      <View style={styles.backgroundGradient}>
-        <View style={[styles.gradientCircle, styles.gradientCircle1]} />
-        <View style={[styles.gradientCircle, styles.gradientCircle2]} />
-      </View>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Animated background gradient */}
+        <View style={styles.backgroundGradient}>
+          <View style={[styles.gradientCircle, styles.gradientCircle1]} />
+          <View style={[styles.gradientCircle, styles.gradientCircle2]} />
+        </View>
 
-      <View style={styles.content}>
-        {/* Animated warning icon */}
+        <View style={styles.content}>
+          {/* Animated warning icon */}
+          <Animated.View
+            style={[
+              styles.iconContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: iconPulse }],
+              },
+            ]}
+          >
+            <View style={styles.iconGlow}>
+              <Ionicons name="warning" size={56} color={COLORS.primary} />
+            </View>
+          </Animated.View>
+
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <Text style={styles.title}>System Rules</Text>
+            <Text style={styles.subtitle}>
+              Read carefully before proceeding
+            </Text>
+          </Animated.View>
+
+          {/* Animated rule cards */}
+          <View style={styles.rulesContainer}>
+            {rules.map((rule, index) => (
+              <Animated.View
+                key={rule.number}
+                style={[
+                  styles.ruleCard,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ translateY: slideAnims[index] }],
+                  },
+                ]}
+              >
+                <View style={styles.ruleHeader}>
+                  <View style={styles.ruleNumberContainer}>
+                    <Text style={styles.ruleNumber}>{rule.number}</Text>
+                  </View>
+                  <View style={styles.ruleIconContainer}>
+                    <Ionicons
+                      name={rule.icon}
+                      size={24}
+                      color={COLORS.primary}
+                    />
+                  </View>
+                </View>
+                <Text style={styles.ruleTitle}>{rule.title}</Text>
+                <Text style={styles.ruleText}>{rule.text}</Text>
+                <View style={styles.ruleAccent} />
+              </Animated.View>
+            ))}
+          </View>
+        </View>
+
+        {/* Animated CTA button */}
         <Animated.View
           style={[
-            styles.iconContainer,
+            styles.buttonContainer,
             {
               opacity: fadeAnim,
-              transform: [{ scale: iconPulse }],
+              transform: [{ scale: buttonScale }],
             },
           ]}
         >
-          <View style={styles.iconGlow}>
-            <Ionicons name="warning" size={56} color={COLORS.primary} />
-          </View>
-        </Animated.View>
-
-        <Animated.View style={{ opacity: fadeAnim }}>
-          <Text style={styles.title}>System Rules</Text>
-          <Text style={styles.subtitle}>Read carefully before proceeding</Text>
-        </Animated.View>
-
-        {/* Animated rule cards */}
-        <View style={styles.rulesContainer}>
-          {rules.map((rule, index) => (
-            <Animated.View
-              key={rule.number}
-              style={[
-                styles.ruleCard,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnims[index] }],
-                },
-              ]}
-            >
-              <View style={styles.ruleHeader}>
-                <View style={styles.ruleNumberContainer}>
-                  <Text style={styles.ruleNumber}>{rule.number}</Text>
-                </View>
-                <View style={styles.ruleIconContainer}>
-                  <Ionicons name={rule.icon} size={24} color={COLORS.primary} />
-                </View>
-              </View>
-              <Text style={styles.ruleTitle}>{rule.title}</Text>
-              <Text style={styles.ruleText}>{rule.text}</Text>
-              <View style={styles.ruleAccent} />
-            </Animated.View>
-          ))}
-        </View>
-      </View>
-
-      {/* Animated CTA button */}
-      <Animated.View
-        style={[
-          styles.buttonContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: buttonScale }],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleAcknowledge}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={[COLORS.primary, COLORS.secondary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.buttonGradient}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleAcknowledge}
+            activeOpacity={0.9}
           >
-            <Text style={styles.buttonText}>I Understand</Text>
-            <Ionicons
-              name="arrow-forward"
-              size={22}
-              color={COLORS.background}
-            />
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.secondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.buttonGradient}
+            >
+              <Text style={styles.buttonText}>I Understand</Text>
+              <Ionicons
+                name="arrow-forward"
+                size={22}
+                color={COLORS.background}
+              />
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
