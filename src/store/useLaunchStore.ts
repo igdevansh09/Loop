@@ -1,39 +1,91 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 
-// 1. 🛡️ The Strict Payload Contract
-export interface TeamPayload {
-  founder_id: string;
-  founder_github: string;
-  project_name: string;
-  project_description: string;
-  required_skills: string;
-  requirement_embedding: number[];
-  hackathon_url: string;
-  private_community_url: string;
-  max_capacity: number;
-  required_college: string;
-  gender_requirement: string;
-}
-
 interface LaunchState {
+  // Form State
+  projectName: string;
+  hackathonUrl: string;
+  requiredSkills: string[];
+  capacity: string;
+  college: string;
+  gender: string;
+  communityUrl: string;
+  description: string;
+  
+  // API & Calibrator State
+  skillSuggestions: string[];
+  isFetchingSkills: boolean;
   isAnalyzing: boolean;
   isSubmitting: boolean;
   signalScore: number | null;
-  aiFeedback: string;
-  vectorData: number[] | null;
+  aiFeedback: string | null;
+  vectorData: any | null;
 
+  // Actions
+  setField: (field: string, value: any) => void;
+  addSkill: (skill: string) => void;
+  removeSkill: (skill: string) => void;
+  fetchSkillSuggestions: (query: string) => Promise<void>;
   analyzeSignal: (description: string) => Promise<boolean>;
-  launchTeam: (payload: TeamPayload) => Promise<boolean>; // No more 'any'
+  launchTeam: (founderId: string, founderGithub: string) => Promise<void>;
   resetState: () => void;
 }
 
+const initialState = {
+  projectName: "",
+  hackathonUrl: "",
+  requiredSkills: [],
+  capacity: "4",
+  college: "Any",
+  gender: "Any",
+  communityUrl: "",
+  description: "",
+  skillSuggestions: [],
+  isFetchingSkills: false,
+  isAnalyzing: false,
+  isSubmitting: false,
+  signalScore: null,
+  aiFeedback: null,
+  vectorData: null,
+};
+
 export const useLaunchStore = create<LaunchState>((set, get) => ({
+  ...initialState,
   isAnalyzing: false,
   isSubmitting: false,
   signalScore: null,
   aiFeedback: "",
   vectorData: null,
+
+  setField: (field, value) => set({ [field]: value }),
+
+  addSkill: (skill) => set((state) => ({ 
+    requiredSkills: [...state.requiredSkills, skill],
+    skillSuggestions: [] // Clear suggestions on add
+  })),
+
+  removeSkill: (skill) => set((state) => ({
+    requiredSkills: state.requiredSkills.filter((s) => s !== skill)
+  })),
+
+  fetchSkillSuggestions: async (query: string) => {
+    if (query.length < 2) {
+      set({ skillSuggestions: [] });
+      return;
+    }
+    set({ isFetchingSkills: true });
+    try {
+      const res = await fetch(`https://api.stackexchange.com/2.3/tags?order=desc&sort=popular&inname=${encodeURIComponent(query)}&site=stackoverflow&pagesize=5`);
+      const data = await res.json();
+      if (data.items) {
+        set({ skillSuggestions: data.items.map((item: any) => item.name) });
+      }
+    } catch (err) {
+      console.error("StackOverflow Fetch Error:", err);
+    } finally {
+      set({ isFetchingSkills: false });
+    }
+  },
 
   analyzeSignal: async (description: string) => {
     set({ isAnalyzing: true, aiFeedback: "", signalScore: null });
@@ -60,28 +112,32 @@ export const useLaunchStore = create<LaunchState>((set, get) => ({
     }
   },
 
-  launchTeam: async (payload: TeamPayload) => {
+  launchTeam: async (founderId: string, founderGithub: string) => {
+    const state = get();
     set({ isSubmitting: true });
     try {
-      const { error } = await supabase.from("teams").insert(payload);
+      // 🚀 FIXED: Store handles pulling its own data for the insert
+      const { error } = await supabase.from("teams").insert({
+        founder_id: founderId,
+        founder_github: founderGithub,
+        project_name: state.projectName,
+        project_description: state.description,
+        required_skills: state.requiredSkills.join(", "),
+        requirement_embedding: state.vectorData,
+        hackathon_url: state.hackathonUrl,
+        private_community_url: state.communityUrl,
+        max_capacity: parseInt(state.capacity) || 4,
+        required_college: state.college,
+        gender_requirement: state.gender,
+      });
+
       if (error) throw error;
-      
-      get().resetState(); 
-      return true;
-    } catch (err: unknown) {
-      throw err; 
+      get().resetState(); // Clear form on success
+    } catch (err: any) {
+      throw err;
     } finally {
       set({ isSubmitting: false });
     }
   },
-
-  resetState: () => {
-    set({
-      isAnalyzing: false,
-      isSubmitting: false,
-      signalScore: null,
-      aiFeedback: "",
-      vectorData: null,
-    });
-  }
+  resetState: () => set({ ...initialState }),
 }));

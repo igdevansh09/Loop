@@ -91,10 +91,10 @@ serve(async (req) => {
     // ==========================================
     console.log('Converting Profile to Vector Embedding...');
     
-    // We must synthesize the structured JSON into a dense semantic string for the AI to embed
     const textToEmbed = `Assessment: ${parsedTruth.ai_assessment} Stack: ${parsedTruth.ai_primary_stack} Capability: ${parsedTruth.ai_weekend_build}`;
     
-    const embeddingModel = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+    // 🚀 THE FIX: Change 'text-embedding-004' to 'gemini-embedding-001'
+    const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
     const embeddingResult = await embeddingModel.embedContent(textToEmbed);
     
     // Slice to 768 to perfectly fit your pgvector column constraint

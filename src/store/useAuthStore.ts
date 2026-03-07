@@ -9,6 +9,12 @@ import { Alert, AppState, AppStateStatus, NativeEventSubscription } from 'react-
 // Required to make sure the web browser closes automatically when auth finishes
 WebBrowser.maybeCompleteAuthSession();
 
+export interface GithubStats {
+  repoCount: number;
+  totalStars: number;
+  topLanguages: { lang: string; percentage: number }[];
+}
+
 // 1. 🛡️ Strict Database Schema Contract (This fixes your error)
 export interface UserProfile {
   id: string;
@@ -35,6 +41,9 @@ interface AuthState {
   signOut: () => Promise<void>;
   fetchProfile: (userId: string) => Promise<void>;
   burnTrainingGround: (collegeName: string) => Promise<boolean>;
+  generateAiProfile: () => Promise<boolean>;
+  githubStats: GithubStats | null;
+  deleteAccount: () => Promise<boolean>;
 }
 
 // Global trackers to prevent listener memory leaks during re-renders
@@ -49,6 +58,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   hasSeenOnboarding: false,
   isAuthenticating: false,
+  githubStats: null,
 
   initializeAuth: async () => {
     try {
@@ -178,7 +188,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       .from('users')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error("Profile fetch error:", error.message);
@@ -186,7 +196,40 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     
     if (data) {
-      set({ profile: data as UserProfile });
+      // 🚀 THE FIX: Calculate the math ONCE in the background, not on every render
+      let repos: any[] = [];
+      const rawData = data.raw_github_data;
+
+      if (typeof rawData === "string") {
+        try { repos = JSON.parse(rawData); } catch (e) { console.error("Parse error"); }
+      } else if (Array.isArray(rawData)) {
+        repos = rawData;
+      }
+
+      const repoCount = repos.length;
+      let totalStars = 0;
+      const langCounts: Record<string, number> = {};
+
+      repos.forEach((repo) => {
+        totalStars += repo.stars || 0;
+        if (repo.language) {
+          langCounts[repo.language] = (langCounts[repo.language] || 0) + 1;
+        }
+      });
+
+      const topLanguages = Object.entries(langCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([lang, count]) => ({
+          lang: lang.toUpperCase(),
+          percentage: Math.round((count / repoCount) * 100),
+        }));
+
+      // Store both the raw profile AND the pre-calculated stats
+      set({ 
+        profile: data as UserProfile,
+        githubStats: { repoCount, totalStars, topLanguages }
+      });
     }
   },
 
@@ -214,6 +257,56 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (err: any) {
       console.error("Failed to burn training ground:", err);
       return false;
+    }
+  },
+
+  
+  generateAiProfile: async () => {
+    const { user } = get();
+    
+    // We need their ID and GitHub handle to feed your Edge Function
+    const githubHandle = user?.user_metadata?.user_name;
+    if (!user || !githubHandle) return false;
+
+    try {
+      console.log("IGNITING FORGE FOR:", githubHandle);
+      
+      const { data, error } = await supabase.functions.invoke('generate-profile', {
+        body: { 
+          user_id: user.id, 
+          github_handle: githubHandle 
+        }
+      });
+
+      if (error) throw error;
+
+      // 🚀 The AI has finished processing. Re-fetch the profile so the UI instantly updates with the new Vector and Stats!
+      await get().fetchProfile(user.id);
+      
+      return true;
+    } catch (err: any) {
+      console.error("Forge Ignition Failed:", err.message);
+      return false;
+    }
+  },
+
+  deleteAccount: async () => {
+    set({ isAuthenticating: true });
+    try {
+      // 1. Trigger the database self-destruct
+      const { error } = await supabase.rpc('delete_user');
+      if (error) throw error;
+
+      // 2. Clear the local cache and sign out
+      await supabase.auth.signOut();
+      set({ session: null, user: null, profile: null, githubStats: null });
+      
+      return true;
+    } catch (err: any) {
+      console.error("Failed to burn identity:", err.message);
+      return false;
+    } finally {
+      set({ isAuthenticating: false });
     }
   },
 }));
