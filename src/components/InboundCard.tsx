@@ -1,17 +1,15 @@
 import React from "react";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Platform, 
-  Linking 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../constants/theme";
 import * as Haptics from "expo-haptics";
 
-// HUD Corner Brackets
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
     <View style={[styles.corner, styles.topLeft, { borderColor: color }]} />
@@ -27,24 +25,23 @@ interface InboundCardProps {
     profiles: {
       github_handle: string;
       training_ground: string;
-      ai_primary_stack: string; // 🚀 The AI Summary
+      ai_primary_stack: string;
     };
     teams: {
       project_name: string;
     };
   };
-  onAction: (id: string, status: 'accepted' | 'rejected') => Promise<void>;
+  onAction: (id: string, status: "accepted" | "rejected") => Promise<void>;
+  onOpenModal?: (item: any) => void;
 }
 
-export const InboundCard = ({ item, onAction }: InboundCardProps) => {
-  
-  const openGitHub = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Linking.openURL(`https://github.com/${item.profiles.github_handle}`);
-  };
-
-  const handlePress = (status: 'accepted' | 'rejected') => {
-    if (status === 'accepted') {
+export const InboundCard = ({
+  item,
+  onAction,
+  onOpenModal,
+}: InboundCardProps) => {
+  const handlePress = (status: "accepted" | "rejected") => {
+    if (status === "accepted") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -53,146 +50,149 @@ export const InboundCard = ({ item, onAction }: InboundCardProps) => {
   };
 
   return (
-    <View style={styles.hudBox}>
+    <TouchableOpacity
+      style={styles.hudBox}
+      activeOpacity={0.7}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (onOpenModal) onOpenModal(item);
+      }}
+    >
       <CornerBrackets />
-      
-      {/* 1. Header Segment */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.kicker}>INBOUND_CLEARANCE //</Text>
-        <Text style={styles.projectName} numberOfLines={1}>
-          TARGET: {item.teams?.project_name?.toUpperCase() || "UNKNOWN"}
-        </Text>
-      </View>
 
-      {/* 2. Tactical Identity Button & AI Stack Summary */}
-      <View style={styles.identityContainer}>
-        <Text style={styles.kicker}>IDENTITY_VERIFICATION //</Text>
-        <TouchableOpacity 
-          style={styles.githubSourceButton} 
-          onPress={openGitHub}
-          activeOpacity={0.8}
-        >
-          <View style={styles.githubRow}>
-            <Ionicons name="logo-github" size={20} color={COLORS.primary} />
-            <Text style={styles.handleText}>@{item.profiles.github_handle}</Text>
-          </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>VIEW SOURCE</Text>
-          </View>
-        </TouchableOpacity>
-        
-        {/* 🚀 THE AI SUMMARY RESTORED */}
-        <Text style={styles.stackText}>
-          PRIMARY_STACK: {item.profiles.ai_primary_stack || "UNSET"}
-        </Text>
-      </View>
+      <View style={styles.cardLayout}>
+        {/* LEFT: Core Intel */}
+        <View style={styles.intelBlock}>
+          <Text style={styles.kicker} numberOfLines={1}>
+            TARGET // {item.teams?.project_name?.toUpperCase() || "UNKNOWN"}
+          </Text>
 
-      {/* 3. Origin Signature (College) */}
-      <View style={styles.originContainer}>
-        <Text style={styles.kicker}>ORIGIN_SIGNATURE //</Text>
-        <View style={styles.originBox}>
-          <Ionicons name="school-outline" size={16} color={COLORS.grey} />
-          <Text style={styles.originText} numberOfLines={1}>
-            {item.profiles.training_ground?.toUpperCase() || "OPEN_DOMAIN / SELF_TAUGHT"}
+          <View style={styles.identityRow}>
+            <Ionicons name="logo-github" size={16} color={COLORS.white} />
+            <Text style={styles.handleText}>
+              @{item.profiles.github_handle}
+            </Text>
+          </View>
+
+          {/* 🚀 RESTORED: Expanding AI Summary / Primary Stack */}
+          <Text style={styles.stackText}>
+            {item.profiles.ai_primary_stack || "UNSET"}
           </Text>
         </View>
-      </View>
 
-      {/* 4. Full-Width Action Grid */}
-      <View style={styles.actionContainer}>
-        <TouchableOpacity 
-          style={styles.rejectButton} 
-          onPress={() => handlePress('rejected')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.rejectText}>DENY ACCESS</Text>
-        </TouchableOpacity>
+        {/* RIGHT: Quick Actions */}
+        <View style={styles.actionBlock}>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.rejectBtn]}
+            activeOpacity={0.6}
+            onPress={() => handlePress("rejected")}
+          >
+            <Ionicons name="close" size={18} color="#ef4444" />
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.acceptButton} 
-          onPress={() => handlePress('accepted')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.acceptText}>APPROVE DEPLOYMENT</Text>
-          <Ionicons name="chevron-forward" size={16} color={COLORS.background} />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.acceptBtn]}
+            activeOpacity={0.6}
+            onPress={() => handlePress("accepted")}
+          >
+            <Ionicons name="checkmark" size={18} color={COLORS.background} />
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  // Brutalist HUD Box
   hudBox: {
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.4)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
-    padding: 16,
-    marginBottom: 20,
+    padding: 14,
+    marginBottom: 12,
     position: "relative",
   },
-  corner: { position: "absolute", width: 10, height: 10, borderColor: COLORS.primary },
-  topLeft: { top: -1, left: -1, borderTopWidth: 2, borderLeftWidth: 2 },
-  topRight: { top: -1, right: -1, borderTopWidth: 2, borderRightWidth: 2 },
-  bottomLeft: { bottom: -1, left: -1, borderBottomWidth: 2, borderLeftWidth: 2 },
-  bottomRight: { bottom: -1, right: -1, borderBottomWidth: 2, borderRightWidth: 2 },
 
-  // Typography
-  kicker: { color: COLORS.primary, fontSize: 9, fontWeight: "900", letterSpacing: 2, marginBottom: 8 },
-  projectName: { color: COLORS.white, fontSize: 14, fontWeight: "900", letterSpacing: 1 },
-  sectionHeader: { marginBottom: 20, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.05)", paddingBottom: 12 },
+  corner: {
+    position: "absolute",
+    width: 8,
+    height: 8,
+    borderColor: COLORS.primary,
+  },
+  topLeft: { top: -1, left: -1, borderTopWidth: 1.5, borderLeftWidth: 1.5 },
+  topRight: { top: -1, right: -1, borderTopWidth: 1.5, borderRightWidth: 1.5 },
+  bottomLeft: {
+    bottom: -1,
+    left: -1,
+    borderBottomWidth: 1.5,
+    borderLeftWidth: 1.5,
+  },
+  bottomRight: {
+    bottom: -1,
+    right: -1,
+    borderBottomWidth: 1.5,
+    borderRightWidth: 1.5,
+  },
 
-  // Identity Block
-  identityContainer: { marginBottom: 20 },
-  githubSourceButton: {
+  cardLayout: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center", // Action buttons will stay centered even if text gets tall
+    gap: 15,
+  },
+  intelBlock: {
+    flex: 1, // Takes up remaining space so buttons don't get squished
+    justifyContent: "center",
+  },
+  actionBlock: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  kicker: {
+    color: COLORS.primary,
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    marginBottom: 6,
+  },
+  identityRow: {
+    flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    gap: 6,
+    marginBottom: 6,
+  },
+  handleText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  // 🚀 FIXED: Allowed wrapping and gave it line-height for readability
+  stackText: {
+    color: COLORS.grey,
+    fontSize: 10,
+    fontWeight: "600",
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    textTransform: "uppercase",
+    flexWrap: "wrap",
+    lineHeight: 16,
+  },
+
+  actionBtn: {
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    padding: 12,
-    marginBottom: 8,
+    borderRadius: 4,
   },
-  githubRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  handleText: { color: COLORS.white, fontSize: 16, fontWeight: "800" },
-  badge: { backgroundColor: `${COLORS.primary}20`, paddingHorizontal: 6, paddingVertical: 2 },
-  badgeText: { color: COLORS.primary, fontSize: 8, fontWeight: "900" },
-  stackText: { color: COLORS.grey, fontSize: 10, fontWeight: "700", textTransform: "uppercase", marginLeft: 2, lineHeight: 16 },
-
-  // Origin Signature
-  originContainer: { marginBottom: 25 },
-  originBox: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    gap: 10, 
-    backgroundColor: "rgba(0,0,0,0.4)", 
-    padding: 12, 
-    borderWidth: 1, 
-    borderColor: "rgba(255, 255, 255, 0.05)" 
+  rejectBtn: {
+    borderColor: "rgba(239, 68, 68, 0.3)",
+    backgroundColor: "rgba(239, 68, 68, 0.05)",
   },
-  originText: { color: COLORS.white, fontSize: 12, fontWeight: "600", fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', letterSpacing: 0.5 },
-
-  // Action Grid
-  actionContainer: { gap: 10 },
-  rejectButton: { 
-    width: "100%", 
-    padding: 14, 
-    borderWidth: 1, 
-    borderColor: "rgba(239, 68, 68, 0.3)", 
-    backgroundColor: "rgba(239, 68, 68, 0.05)", 
-    alignItems: "center" 
+  acceptBtn: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
   },
-  rejectText: { color: "#ef4444", fontSize: 11, fontWeight: "900", letterSpacing: 2 },
-  
-  acceptButton: { 
-    width: "100%", 
-    padding: 16, 
-    backgroundColor: COLORS.primary, 
-    flexDirection: "row", 
-    justifyContent: "center", 
-    alignItems: "center", 
-    gap: 8 
-  },
-  acceptText: { color: COLORS.background, fontSize: 12, fontWeight: "900", letterSpacing: 2 },
 });

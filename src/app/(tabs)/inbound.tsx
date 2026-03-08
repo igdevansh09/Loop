@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,24 @@ import { COLORS } from "../../constants/theme";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useLedgerStore } from "../../store/useLedgerStore";
 import { InboundCard } from "../../components/InboundCard";
+import { ApplicantModal } from "@/components/ApplicantModal";
+
+interface IntelPayload {
+  id: string;
+  profiles: {
+    github_handle: string;
+    training_ground: string;
+    ai_assessment: string;
+  };
+  teams: {
+    project_name: string;
+  };
+}
+
 
 export default function InboundScreen() {
   const { user } = useAuthStore();
+  const [selectedIntel, setSelectedIntel] = useState<IntelPayload | null>(null);
   const { inbound, isLoading, fetchLedger, updateRequest } = useLedgerStore();
 
   useEffect(() => {
@@ -40,7 +55,7 @@ export default function InboundScreen() {
       {/* Static Header */}
       <View style={styles.headerContainer}>
         <Animated.View entering={FadeInDown.delay(100).springify()}>
-          <Text style={styles.kicker}>CLEARANCE // LOGS</Text>
+          <Text style={styles.kicker}>PROTOCOL // IN</Text>
           <Text style={styles.headerTitle}>INBOUND</Text>
         </Animated.View>
       </View>
@@ -62,7 +77,12 @@ export default function InboundScreen() {
               key={item.id}
               entering={FadeInDown.delay(index * 100)}
             >
-              <InboundCard item={item} onAction={updateRequest} />
+              <InboundCard
+                item={item}
+                onAction={updateRequest}
+                // 2. Catch the tap and save the intel to state
+                onOpenModal={() => setSelectedIntel(item)}
+              />
             </Animated.View>
           ))
         ) : (
@@ -74,6 +94,11 @@ export default function InboundScreen() {
           </Animated.View>
         )}
       </ScrollView>
+      <ApplicantModal
+        visible={!!selectedIntel} // Converts object to true, null to false
+        applicant={selectedIntel}
+        onClose={() => setSelectedIntel(null)} // Clears state to close modal
+      />
     </View>
   );
 }

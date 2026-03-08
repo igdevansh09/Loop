@@ -23,8 +23,8 @@ export const useArenaStore = create<ArenaState>((set) => ({
     set({ isLoading: true });
     try {
       const { data, error } = await supabase.rpc("match_teams_for_user", {
-        p_user_id: userId,
-        p_limit: 10,
+        current_user_id: userId,
+        match_count: 10,
       });
 
       if (error) throw error;

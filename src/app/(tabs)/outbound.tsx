@@ -41,7 +41,7 @@ export default function OutboundScreen() {
       {/* Static Header */}
       <View style={styles.headerContainer}>
         <Animated.View entering={FadeInDown.delay(100).springify()}>
-          <Text style={styles.kicker}>CLEARANCE // LOGS</Text>
+          <Text style={styles.kicker}>PROTOCOL // OUT</Text>
           <Text style={styles.headerTitle}>OUTBOUND</Text>
         </Animated.View>
       </View>

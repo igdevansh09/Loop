@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight for React Native
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -16,9 +15,9 @@ serve(async (req) => {
   try {
     const { text } = await req.json();
     if (!text) throw new Error("No architecture description provided.");
-    if (!GEMINI_API_KEY) throw new Error("Missing Gemini API Key in environment.");
+    if (!GEMINI_API_KEY) throw new Error("Missing GEMINI_API_KEY in Supabase secrets.");
 
-    // Phase 1: The Bouncer (Generative LLM)
+    // Phase 1: The Bouncer
     const analyzeRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -44,29 +43,32 @@ serve(async (req) => {
     const analyzeData = await analyzeRes.json();
     if (analyzeData.error) throw new Error(`Gemini LLM Error: ${analyzeData.error.message}`);
     
-    // Parse the structured JSON response
-    const llmResponse = JSON.parse(analyzeData.candidates[0].content.parts[0].text);
+    // 🚀 THE SCRUBBER: Strips Markdown formatting so JSON.parse doesn't crash
+    let rawText = analyzeData.candidates[0].content.parts[0].text;
+    rawText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const llmResponse = JSON.parse(rawText);
+    
     const score = llmResponse.score;
     const feedback = llmResponse.feedback;
-
     let vector = null;
 
-    // Phase 2: The Math (Embedding LLM)
-    // Only burn embedding compute if the founder proved they know what they are building
+    // Phase 2: The Math
     if (score > 85) {
-       const embedRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${GEMINI_API_KEY}`, {
+       // 🚀 UPGRADE: Pointing to the new gemini-embedding-001 model
+       const embedRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${GEMINI_API_KEY}`, {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({
-           model: "models/text-embedding-004",
-           content: { parts: [{ text }] }
+           model: "models/gemini-embedding-001",
+           content: { parts: [{ text }] },
+           outputDimensionality: 768 // 🚀 CRITICAL: Compresses the 3072D vector down to 768D to perfectly fit your Postgres schema
          })
        });
        
        const embedData = await embedRes.json();
        if (embedData.error) throw new Error(`Gemini Embedding Error: ${embedData.error.message}`);
        
-       vector = embedData.embedding.values; // Exactly 768 dimensions
+       vector = embedData.embedding.values; 
     }
 
     return new Response(JSON.stringify({ score, feedback, vector }), {
@@ -75,6 +77,9 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
+    // 🚀 THE LOGGER: Forces the actual error to print in your Supabase Dashboard
+    console.error("[CRITICAL SYSTEM ERROR]:", error.message);
+    
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,

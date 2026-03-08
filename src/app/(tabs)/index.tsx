@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import * as Haptics from "expo-haptics";
@@ -35,6 +36,9 @@ export default function ArenaScreen() {
     processSwipe,
   } = useArenaStore();
 
+  // 🚀 NEW: Track when the deck runs out of physical cards
+  const [allCardsSwiped, setAllCardsSwiped] = useState(false);
+
   useEffect(() => {
     if (!user || !profile) return;
 
@@ -45,6 +49,7 @@ export default function ArenaScreen() {
         setForging(false);
       } else {
         await fetchMatches(user.id);
+        setAllCardsSwiped(false); // Reset on boot
       }
     };
 
@@ -65,6 +70,13 @@ export default function ArenaScreen() {
     }
 
     processSwipe(user!.id, team.id, direction);
+  };
+
+  // 🚀 NEW: The Manual Radar Ping
+  const handleRescan = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setAllCardsSwiped(false);
+    await fetchMatches(user!.id);
   };
 
   // --- 1. THE FORGE STATE (Smooth Fade) ---
@@ -116,7 +128,6 @@ export default function ArenaScreen() {
   // --- 3. THE ARENA MAIN UI ---
   return (
     <View style={styles.container}>
-      {/* Deep Atmospheric Glow */}
       <LinearGradient
         colors={[`${COLORS.primary}15`, "transparent"]}
         style={StyleSheet.absoluteFillObject}
@@ -124,7 +135,6 @@ export default function ArenaScreen() {
         end={{ x: 0.5, y: 0.4 }}
       />
 
-      {/* Kinetic Header */}
       <Animated.View
         entering={FadeInDown.delay(100).springify().damping(15)}
         style={styles.headerContainer}
@@ -134,7 +144,8 @@ export default function ArenaScreen() {
       </Animated.View>
 
       <View style={styles.swiperContainer}>
-        {teams.length > 0 ? (
+        {/* 🚀 FIXED: Now checks if teams exist AND if we haven't swiped them all */}
+        {teams.length > 0 && !allCardsSwiped ? (
           <Animated.View
             entering={FadeIn.delay(300).duration(800)}
             style={{ flex: 1 }}
@@ -144,6 +155,7 @@ export default function ArenaScreen() {
               renderCard={(card) => <SwiperCard card={card} />}
               onSwipedLeft={(index) => handlePhysicalSwipe(index, "left")}
               onSwipedRight={(index) => handlePhysicalSwipe(index, "right")}
+              onSwipedAll={() => setAllCardsSwiped(true)} // 🚀 FIXED: Tells the UI the deck is empty
               cardIndex={0}
               containerStyle={{ backgroundColor: "transparent", flex: 1 }}
               cardVerticalMargin={0}
@@ -165,7 +177,7 @@ export default function ArenaScreen() {
                       fontSize: 28,
                       fontWeight: "900",
                       letterSpacing: 2,
-                      transform: [{ rotate: "10deg" }], // Makes it look like a physical stamp
+                      transform: [{ rotate: "10deg" }],
                     },
                     wrapper: {
                       flexDirection: "column",
@@ -187,7 +199,7 @@ export default function ArenaScreen() {
                       fontSize: 28,
                       fontWeight: "900",
                       letterSpacing: 2,
-                      transform: [{ rotate: "-10deg" }], // Makes it look like a physical stamp
+                      transform: [{ rotate: "-10deg" }],
                     },
                     wrapper: {
                       flexDirection: "column",
@@ -202,7 +214,6 @@ export default function ArenaScreen() {
             />
           </Animated.View>
         ) : (
-          /* Smooth Layout Animation when cards run out */
           <Animated.View
             layout={Layout.springify()}
             entering={FadeInDown.delay(200).springify()}
@@ -216,8 +227,16 @@ export default function ArenaScreen() {
             />
             <Text style={styles.noMore}>SECTOR CLEAR</Text>
             <Text style={styles.subText}>
-              No more truth vectors detected. Check back later.
+              No more truth vectors detected in your immediate radius.
             </Text>
+
+            {/* 🚀 NEW: The Rescan Button */}
+            <TouchableOpacity
+              style={styles.rescanButton}
+              onPress={handleRescan}
+            >
+              <Text style={styles.rescanText}>RESCAN SECTOR</Text>
+            </TouchableOpacity>
           </Animated.View>
         )}
       </View>
@@ -230,8 +249,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-
-  // 🚀 ALIGNMENT LOCK: Changed paddingHorizontal from 24 to 16
   headerContainer: {
     paddingTop: 60,
     paddingHorizontal: 16,
@@ -252,15 +269,10 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     textTransform: "uppercase",
   },
-
   swiperContainer: {
     flex: 1,
     zIndex: 1,
-    // Note: We leave paddingHorizontal off here so cards can
-    // utilize the full width of the screen if needed
   },
-
-  // 🚀 ALIGNMENT LOCK: Matched the 16px padding for loading/empty states
   center: {
     flex: 1,
     justifyContent: "center",
@@ -275,7 +287,6 @@ const styles = StyleSheet.create({
     marginTop: -height * 0.15,
     paddingHorizontal: 16,
   },
-
   loadingText: {
     color: COLORS.primary,
     fontSize: 14,
@@ -296,7 +307,28 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     letterSpacing: 1,
     textAlign: "center",
-    maxWidth: "85%", // Increased slightly for the wider 16px layout
+    maxWidth: "85%",
     lineHeight: 20,
+    marginBottom: 30, // 🚀 Added spacing above the button
+  },
+  // 🚀 NEW: Rescan Button Styles
+  rescanButton: {
+    backgroundColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 8,
+    gap: 8,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  rescanText: {
+    color: COLORS.background,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 1.5,
   },
 });

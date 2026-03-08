@@ -25,6 +25,7 @@ import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
 import { useAuthStore, UserProfile } from "../../store/useAuthStore";
+import { useRouter } from "expo-router";
 
 interface ExtendedProfile extends UserProfile {
   training_ground: string | null;
@@ -117,6 +118,8 @@ export default function ProfileScreen() {
     signOut,
     deleteAccount,
   } = useAuthStore();
+
+  const router = useRouter();
 
   const [collegeInput, setCollegeInput] = useState("");
   const [isBurning, setIsBurning] = useState(false);
@@ -216,7 +219,7 @@ export default function ProfileScreen() {
         entering={FadeInDown.delay(100).springify().damping(15)}
         style={styles.headerContainer}
       >
-        <Text style={styles.kicker}>IDENTITY // CLASSIFIED</Text>
+        <Text style={styles.kicker}>PROTOCOL // IDENTITY</Text>
         <Text style={styles.header}>THE DOSSIER</Text>
       </Animated.View>
 
@@ -289,6 +292,33 @@ export default function ProfileScreen() {
               </Animated.Text>
             </View>
           </View>
+        </Animated.View>
+
+        {/* 🚀 NEW: COMMAND CENTER ACCESS UNIT */}
+        <Animated.View entering={FadeInDown.delay(250).springify()}>
+          <TouchableOpacity
+            style={styles.commandCenterLink}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push("/command-center"); // 🚀 Navigate to the new screen
+            }}
+          >
+            <CornerBrackets color={COLORS.primary} />
+            <View style={styles.commandRow}>
+              <Ionicons name="terminal" size={20} color={COLORS.primary} />
+              <View style={{ flex: 1, marginLeft: 15 }}>
+                <Text style={styles.commandTitle}>COMMAND_CENTER</Text>
+                <Text style={styles.commandSub}>
+                  MANAGE ACTIVE MISSIONS & CAPACITY
+                </Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={COLORS.primary}
+              />
+            </View>
+          </TouchableOpacity>
         </Animated.View>
 
         {/* --- 2. AI DOSSIER (SHATTERED SHARDS) --- */}
@@ -815,6 +845,31 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "900",
     textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  commandCenterLink: {
+    backgroundColor: "rgba(234, 179, 8, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(234, 179, 8, 0.3)",
+    padding: 20,
+    marginBottom: 20,
+    position: "relative",
+  },
+  commandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  commandTitle: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+  commandSub: {
+    color: COLORS.grey,
+    fontSize: 9,
+    fontWeight: "600",
+    marginTop: 2,
     letterSpacing: 1,
   },
 });

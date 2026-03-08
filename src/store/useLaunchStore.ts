@@ -90,8 +90,19 @@ export const useLaunchStore = create<LaunchState>((set, get) => ({
   analyzeSignal: async (description: string) => {
     set({ isAnalyzing: true, aiFeedback: "", signalScore: null });
     try {
+      // 1. FORCE EXTRACT THE FRESHEST TOKEN
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error("Authentication missing. The Gateway rejected you.");
+      }
+
+      // 2. INJECT IT DIRECTLY INTO THE HEADERS
       const { data, error } = await supabase.functions.invoke("analyze-signal", {
         body: { text: description },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`, // Force the JWT
+        }
       });
 
       if (error) throw error;

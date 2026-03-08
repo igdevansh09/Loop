@@ -9,7 +9,7 @@ export default function TabLayout() {
   const { session, isInitialized, user } = useAuthStore();
 
   // 🚀 Pull the arrays and the fetch function
-  const { inbound, outbound, fetchLedger } = useLedgerStore();
+  const { inbound, fetchLedger } = useLedgerStore();
 
   // Fetch the latest ledger data when the layout mounts so badges are accurate
   useEffect(() => {
@@ -58,12 +58,6 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="outbound">
         <NativeTabs.Trigger.Icon sf="location.north.fill" md="near_me" />
         <NativeTabs.Trigger.Label>Outbound</NativeTabs.Trigger.Label>
-
-        {outbound?.length > 0 && (
-          <NativeTabs.Trigger.Badge >
-            {String(outbound.length)}
-          </NativeTabs.Trigger.Badge>
-        )}
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="profile">

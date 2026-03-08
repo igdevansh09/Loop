@@ -6,10 +6,12 @@ import {
   Dimensions,
   Platform,
   TouchableOpacity,
-  Linking,
+  Linking as RNLinking,
+  Share,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import * as Linking from "expo-linking";
 import { COLORS } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -25,7 +27,10 @@ interface SwiperCardProps {
     project_description: string;
     founder_github: string;
     required_college: string;
-    founder_college?: string; // 🚀 ADDED: To accept the founder's actual college
+    founder_college?: string;
+    max_capacity?: number; // 🚀 ADDED CAPACITY
+    required_gender?: string; // 🚀 ADDED GENDER
+    hackathon_url?: string;
   };
 }
 
@@ -42,7 +47,22 @@ export default function SwiperCard({ card }: SwiperCardProps) {
   const openGitHub = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (card.founder_github) {
-      Linking.openURL(`https://github.com/${card.founder_github}`);
+      RNLinking.openURL(`https://github.com/${card.founder_github}`);
+    }
+  };
+
+  const handleShare = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    try {
+      const shareUrl = Linking.createURL("/dossier", {
+        queryParams: { id: card.id },
+      });
+
+      await Share.share({
+        message: `[ENCRYPTED INTEL] I found a high-value project in the Arena: ${card.project_name}.\n\nDecrypt the dossier here: ${shareUrl}`,
+      });
+    } catch (error) {
+      console.error("Transmission failed:", error);
     }
   };
 
@@ -58,6 +78,10 @@ export default function SwiperCard({ card }: SwiperCardProps) {
         description: card.project_description,
         founder: card.founder_github,
         college: card.required_college,
+        founder_college: card.founder_college, // 🚀 ADDED
+        capacity: card.max_capacity?.toString(), // 🚀 ADDED
+        gender: card.required_gender, // 🚀 ADDED
+        hackathon_url: card.hackathon_url,
       },
     });
   };
@@ -76,9 +100,15 @@ export default function SwiperCard({ card }: SwiperCardProps) {
             {isNaN(matchPercentage) ? "0" : matchPercentage}% TRUTH MATCH
           </Text>
         </View>
-        <Text style={styles.systemId}>
-          SYS_ID: {Math.random().toString(36).substring(7).toUpperCase()}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <TouchableOpacity
+            onPress={handleShare}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.6}
+          >
+            <Ionicons name="share-social" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.content}>
@@ -91,28 +121,55 @@ export default function SwiperCard({ card }: SwiperCardProps) {
 
         <View style={styles.divider} />
 
-        {/* 🚀 MOVED: Required College is now a dedicated recruitment domain constraint */}
-        <Text style={styles.kicker}>REQUIRED_COLLEGE //</Text>
-        <View style={styles.constraintBadge}>
-          <Ionicons
-            name="business-outline"
-            size={12}
-            color={COLORS.background}
-          />
-          <Text style={styles.constraintText}>
-            {card.required_college?.toUpperCase() === "ANY"
-              ? "ANY COLLEGE"
-              : card.required_college?.toUpperCase()}
-          </Text>
+        {/* 🚀 UPGRADED: Team Constraints Row */}
+        <Text style={styles.kicker}>TEAM_CONSTRAINTS //</Text>
+        <View style={styles.constraintsRow}>
+          <View style={styles.constraintBadge}>
+            <Ionicons
+              name="business-outline"
+              size={12}
+              color={COLORS.background}
+            />
+            <Text style={styles.constraintText}>
+              {card.required_college?.toUpperCase() === "ANY"
+                ? "ANY COLLEGE"
+                : card.required_college?.toUpperCase()}
+            </Text>
+          </View>
+
+          <View style={styles.constraintBadge}>
+            <Ionicons
+              name="people-outline"
+              size={12}
+              color={COLORS.background}
+            />
+            <Text style={styles.constraintText}>
+              MAX: {card.max_capacity || "ANY"}
+            </Text>
+          </View>
+
+          <View style={styles.constraintBadge}>
+            <Ionicons
+              name="male-female-outline"
+              size={12}
+              color={COLORS.background}
+            />
+            <Text style={styles.constraintText}>
+              {card.required_gender?.toUpperCase() || "ANY"}
+            </Text>
+          </View>
         </View>
 
         <Text style={styles.kicker}>REQUIRED_STACK //</Text>
         <View style={styles.skillsContainer}>
           {skills.slice(0, 4).map((skill, index) => (
-            <View key={index} style={styles.skillTag} >
+            <View key={index} style={styles.skillTag}>
               <Text style={styles.skillText}>{skill}</Text>
             </View>
           ))}
+          <Text style={{ color: COLORS.grey, fontSize: 10, marginTop: 6 }}>
+            {skills.length > 4 && `+${skills.length - 4} more`}
+          </Text>
         </View>
       </View>
 
@@ -130,7 +187,6 @@ export default function SwiperCard({ card }: SwiperCardProps) {
             </Text>
           </View>
 
-          {/* 🚀 FIXED: Only shows if founder_college exists, otherwise just shows the arrow */}
           {card.founder_college ? (
             <View style={styles.collegeInfo}>
               <Text style={styles.collegeText} numberOfLines={1}>
@@ -192,11 +248,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1,
   },
-  systemId: {
-    color: COLORS.grey,
-    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-    fontSize: 10,
-  },
   content: { flex: 1, overflow: "hidden" },
   kicker: {
     color: COLORS.primary,
@@ -224,17 +275,21 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     marginVertical: 15,
   },
-  // 🚀 NEW STYLES FOR DOMAIN CONSTRAINT BADGE
+  // 🚀 NEW: Constraints Row Layout
+  constraintsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 15,
+  },
   constraintBadge: {
     backgroundColor: COLORS.white,
-    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
     gap: 4,
-    marginBottom: 15,
   },
   constraintText: {
     color: COLORS.background,
@@ -247,8 +302,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 20,
-    maxHeight: 28, // 🚀 Locks container to exactly one line tall
-    overflow: "hidden", // 🚀 Instantly hides any tag that gets pushed to line 2
+    maxHeight: 28,
+    overflow: "hidden",
   },
   skillTag: {
     backgroundColor: "rgba(255, 255, 255, 0.05)",
