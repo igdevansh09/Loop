@@ -19,12 +19,13 @@ const { height } = Dimensions.get("window");
 interface SwiperCardProps {
   card: {
     id: string;
-    similarity: number;
+    match_score: number;
     project_name: string;
     required_skills: string;
     project_description: string;
     founder_github: string;
     required_college: string;
+    founder_college?: string; // 🚀 ADDED: To accept the founder's actual college
   };
 }
 
@@ -34,11 +35,15 @@ export default function SwiperCard({ card }: SwiperCardProps) {
   const skills = card.required_skills
     ? card.required_skills.split(",").map((s) => s.trim())
     : [];
-  const matchPercentage = Math.round(card.similarity * 100);
+
+  // Now mapping to the exact data point Postgres sends us
+  const matchPercentage = Math.round(card.match_score * 100);
 
   const openGitHub = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Linking.openURL(`https://github.com/${card.founder_github}`);
+    if (card.founder_github) {
+      Linking.openURL(`https://github.com/${card.founder_github}`);
+    }
   };
 
   const openDossier = () => {
@@ -64,7 +69,6 @@ export default function SwiperCard({ card }: SwiperCardProps) {
         style={StyleSheet.absoluteFillObject}
       />
 
-      {/* 1. HEADER */}
       <View style={styles.header}>
         <View style={styles.matchBadge}>
           <Ionicons name="scan" size={14} color={COLORS.background} />
@@ -77,45 +81,60 @@ export default function SwiperCard({ card }: SwiperCardProps) {
         </Text>
       </View>
 
-      {/* 2. PROJECT INFO */}
       <View style={styles.content}>
         <Text style={styles.kicker}>PROJECT_NAME //</Text>
         <Text style={styles.projectName}>{card.project_name}</Text>
 
-        {/* 🚀 FIXED: Increased lines to fill space from top */}
-        <Text style={styles.description} numberOfLines={8}>
+        <Text style={styles.description} numberOfLines={3}>
           {card.project_description}
         </Text>
 
         <View style={styles.divider} />
 
+        {/* 🚀 MOVED: Required College is now a dedicated recruitment domain constraint */}
+        <Text style={styles.kicker}>REQUIRED_COLLEGE //</Text>
+        <View style={styles.constraintBadge}>
+          <Ionicons
+            name="business-outline"
+            size={12}
+            color={COLORS.background}
+          />
+          <Text style={styles.constraintText}>
+            {card.required_college?.toUpperCase() === "ANY"
+              ? "ANY COLLEGE"
+              : card.required_college?.toUpperCase()}
+          </Text>
+        </View>
+
         <Text style={styles.kicker}>REQUIRED_STACK //</Text>
         <View style={styles.skillsContainer}>
           {skills.slice(0, 4).map((skill, index) => (
-            <View key={index} style={styles.skillTag}>
+            <View key={index} style={styles.skillTag} >
               <Text style={styles.skillText}>{skill}</Text>
             </View>
           ))}
         </View>
+      </View>
 
-        {/* 🚀 🚀 THE BLUE AREA FILLER: FOUNDER INTEL BAR */}
-        <View style={styles.identityBlock}>
-          <Text style={styles.kicker}>FOUNDER_INTEL //</Text>
-          <TouchableOpacity
-            style={styles.githubFullButton}
-            onPress={openGitHub}
-            activeOpacity={0.8}
-          >
-            <View style={styles.githubInfo}>
-              <Ionicons name="logo-github" size={20} color={COLORS.primary} />
-              <Text style={styles.githubUser}>
-                @{card.founder_github || "FOUNDER"}
-              </Text>
-            </View>
+      <View style={styles.identityBlock}>
+        <Text style={styles.kicker}>FOUNDER_INTEL //</Text>
+        <TouchableOpacity
+          style={styles.githubFullButton}
+          onPress={openGitHub}
+          activeOpacity={0.8}
+        >
+          <View style={styles.githubInfo}>
+            <Ionicons name="logo-github" size={20} color={COLORS.primary} />
+            <Text style={styles.githubUser}>
+              @{card.founder_github || "UNKNOWN"}
+            </Text>
+          </View>
 
+          {/* 🚀 FIXED: Only shows if founder_college exists, otherwise just shows the arrow */}
+          {card.founder_college ? (
             <View style={styles.collegeInfo}>
               <Text style={styles.collegeText} numberOfLines={1}>
-                {card.required_college?.toUpperCase() || "OPEN_DOMAIN"}
+                {card.founder_college.toUpperCase()}
               </Text>
               <Ionicons
                 name="chevron-forward"
@@ -123,11 +142,12 @@ export default function SwiperCard({ card }: SwiperCardProps) {
                 color={COLORS.primary}
               />
             </View>
-          </TouchableOpacity>
-        </View>
+          ) : (
+            <Ionicons name="chevron-forward" size={14} color={COLORS.primary} />
+          )}
+        </TouchableOpacity>
       </View>
 
-      {/* 3. PRIMARY ACTION */}
       <TouchableOpacity
         style={styles.expandButton}
         activeOpacity={0.9}
@@ -142,7 +162,7 @@ export default function SwiperCard({ card }: SwiperCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    height: height * 0.70, // Slightly taller to account for more description
+    height: height * 0.7,
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: "rgba(234, 179, 8, 0.3)",
@@ -177,8 +197,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     fontSize: 10,
   },
-
-  content: { flex: 1 },
+  content: { flex: 1, overflow: "hidden" },
   kicker: {
     color: COLORS.primary,
     fontSize: 10,
@@ -200,18 +219,36 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginBottom: 10,
   },
-
   divider: {
     height: 1,
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     marginVertical: 15,
   },
-
+  // 🚀 NEW STYLES FOR DOMAIN CONSTRAINT BADGE
+  constraintBadge: {
+    backgroundColor: COLORS.white,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    gap: 4,
+    marginBottom: 15,
+  },
+  constraintText: {
+    color: COLORS.background,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
   skillsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 20,
+    maxHeight: 28, // 🚀 Locks container to exactly one line tall
+    overflow: "hidden", // 🚀 Instantly hides any tag that gets pushed to line 2
   },
   skillTag: {
     backgroundColor: "rgba(255, 255, 255, 0.05)",
@@ -227,8 +264,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
   },
-
-  // 🚀 TACTICAL GITHUB BLOCK (The Blue Area Filler)
   identityBlock: { marginTop: "auto", marginBottom: 15 },
   githubFullButton: {
     flexDirection: "row",
@@ -254,7 +289,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1,
   },
-
   expandButton: {
     backgroundColor: COLORS.primary,
     flexDirection: "row",
