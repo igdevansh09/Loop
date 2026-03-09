@@ -5,6 +5,38 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { Alert, AppState, AppStateStatus, NativeEventSubscription } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
+
+
+// --- Add this helper function outside your store ---
+async function registerForPushNotificationsAsync() {
+  let token;
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    
+    if (finalStatus !== 'granted') {
+      console.log('Failed to get push token for push notification!');
+      return undefined;
+    }
+    
+    // Get the token (Make sure projectId is in your app.json/eas.json)
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+  } else {
+    console.log('Must use physical device for Push Notifications');
+  }
+
+  return token;
+}
+
 
 // Required to make sure the web browser closes automatically when auth finishes
 WebBrowser.maybeCompleteAuthSession();
@@ -44,6 +76,8 @@ interface AuthState {
   generateAiProfile: () => Promise<boolean>;
   githubStats: GithubStats | null;
   deleteAccount: () => Promise<boolean>;
+  registerDeviceToken: () => Promise<void>;
+  
 }
 
 // Global trackers to prevent listener memory leaks during re-renders
@@ -169,17 +203,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
-    set({ isAuthenticating: true });
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // 1. Remove the token BEFORE signing out, while we still have permissions
+      if (user) {
+        const token = await registerForPushNotificationsAsync();
+        if (token) {
+          await supabase.rpc('remove_push_token', {
+            p_user_id: user.id,
+            p_token: token
+          });
+          console.log("UPLINK SEVERED: Push Token Removed.");
+        }
+      }
 
-      set({ session: null, user: null, profile: null });
-    } catch (err) {
-      const error = err as Error;
-      Alert.alert('Sign Out Error', error.message);
-    } finally {
-      set({ isAuthenticating: false });
+      // 2. Terminate the session
+      await supabase.auth.signOut();
+      set({ user: null, profile: null, session: null });
+      
+    } catch (error) {
+      console.error("Logout Error:", error);
     }
   },
   
@@ -230,6 +274,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         profile: data as UserProfile,
         githubStats: { repoCount, totalStars, topLanguages }
       });
+    }
+  },
+
+  // 🚀 Call this function right after a successful login or app boot
+  registerDeviceToken: async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        // Send to database
+        await supabase.rpc('add_push_token', {
+          p_user_id: user.id,
+          p_token: token
+        });
+        console.log("UPLINK SECURED: Push Token Registered.");
+      }
+    } catch (error) {
+      console.error("Token Registration Failed:", error);
     }
   },
 
