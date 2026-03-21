@@ -50,7 +50,7 @@ const TypewriterText = ({ text, delay = 0, style, ...props }: any) => {
   const [displayedText, setDisplayedText] = useState("");
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let timeout: ReturnType<typeof setInterval>;
     let index = 0;
     setDisplayedText("");
 
@@ -87,7 +87,7 @@ const TelemetryBar = ({ label, percentage, color, delay }: any) => {
       delay,
       withSpring(percentage, { damping: 15, stiffness: 100 }),
     );
-  }, [percentage]); // Added dependency so it re-animates on refresh
+  }, [percentage]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     width: `${barWidth.value}%`,
@@ -117,13 +117,14 @@ export default function ProfileScreen() {
     generateAiProfile,
     signOut,
     deleteAccount,
+    isGeneratingProfile, // 🚀 NEW: Extracted the AI Lock
   } = useAuthStore();
 
   const router = useRouter();
 
   const [collegeInput, setCollegeInput] = useState("");
   const [isBurning, setIsBurning] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false); // Used for Pull-to-Refresh
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const currentProfile = profile as ExtendedProfile | null;
   const githubMetadata = user?.user_metadata;
@@ -133,16 +134,13 @@ export default function ProfileScreen() {
     githubMetadata?.avatar_url || "https://github.com/identicons/arena.png";
   const isVerified = !!currentProfile?.ai_assessment;
 
-  // 🚀 The Pull-to-Refresh Handler
   const handleRefresh = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsSyncing(true);
-
     const success = await generateAiProfile();
-
-    if (success) {
+    if (success)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
+    else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
         "Uplink Failed",
@@ -157,15 +155,14 @@ export default function ProfileScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
-
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setIsBurning(true);
     const success = await burnTrainingGround(collegeInput.trim());
     setIsBurning(false);
 
-    if (success) {
+    if (success)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
+    else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("System Failure", "Failed to write to database.");
     }
@@ -192,12 +189,11 @@ export default function ProfileScreen() {
           onPress: async () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             const success = await deleteAccount();
-            if (!success) {
+            if (!success)
               Alert.alert(
                 "System Failure",
                 "Could not eradicate identity. Contact command.",
               );
-            }
           },
         },
       ],
@@ -206,7 +202,6 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Deep Atmospheric Glow */}
       <LinearGradient
         colors={[`${COLORS.primary}15`, "transparent"]}
         style={StyleSheet.absoluteFillObject}
@@ -214,7 +209,6 @@ export default function ProfileScreen() {
         end={{ x: 0.5, y: 0.4 }}
       />
 
-      {/* 🚀 FIXED: Added the Kinetic Header from the Arena */}
       <Animated.View
         entering={FadeInDown.delay(100).springify().damping(15)}
         style={styles.headerContainer}
@@ -227,7 +221,6 @@ export default function ProfileScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        // 🚀 FIXED: Added Native Pull-to-Refresh
         refreshControl={
           <RefreshControl
             refreshing={isSyncing}
@@ -252,16 +245,7 @@ export default function ProfileScreen() {
             <View style={styles.identityDetails}>
               <View style={styles.rowCentered}>
                 <Text style={styles.hudKicker}>SYS_ID //</Text>
-                <Text
-                  style={[
-                    styles.clearanceTag,
-                    // {
-                    //   backgroundColor: isVerified
-                    //     ? COLORS.primary
-                    //     : COLORS.grey,
-                    // },
-                  ]}
-                >
+                <Text style={styles.clearanceTag}>
                   {isVerified ? (
                     <Ionicons
                       name="checkmark-circle-sharp"
@@ -294,13 +278,13 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* 🚀 NEW: COMMAND CENTER ACCESS UNIT */}
+        {/* COMMAND CENTER ACCESS UNIT */}
         <Animated.View entering={FadeInDown.delay(250).springify()}>
           <TouchableOpacity
             style={styles.commandCenterLink}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push("/command-center"); // 🚀 Navigate to the new screen
+              router.push("/command-center");
             }}
           >
             <CornerBrackets color={COLORS.primary} />
@@ -321,10 +305,29 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* --- 2. AI DOSSIER (SHATTERED SHARDS) --- */}
-        {isVerified && (
+        {/* --- 2. AI DOSSIER (SHATTERED SHARDS OR ACTIVE FORGE) --- */}
+        {isGeneratingProfile ? (
+          // 🚀 THE BONUS: AI Loading Visual
+          <Animated.View
+            entering={FadeInDown.springify()}
+            style={styles.processingBox}
+          >
+            <CornerBrackets color={COLORS.primary} />
+            <ActivityIndicator
+              size="large"
+              color={COLORS.primary}
+              style={{ marginBottom: 15 }}
+            />
+            <Text style={styles.processingTitle}>FORGE IGNITED //</Text>
+            <TypewriterText
+              text="QUANTUM ANALYSIS OF GITHUB TELEMETRY IN PROGRESS..."
+              delay={100}
+              style={styles.processingText}
+            />
+          </Animated.View>
+        ) : isVerified ? (
+          // Regular Shards if generation is complete
           <View style={styles.shardContainer}>
-            {/* Shard 1: Primary Stack */}
             <Animated.View
               entering={FadeInDown.delay(300).springify()}
               style={styles.shardBox}
@@ -339,7 +342,6 @@ export default function ProfileScreen() {
               </Text>
             </Animated.View>
 
-            {/* Shard 2: 48-Hour Capability */}
             <Animated.View
               entering={FadeInDown.delay(400).springify()}
               style={[
@@ -359,7 +361,6 @@ export default function ProfileScreen() {
               </Text>
             </Animated.View>
 
-            {/* Shard 3: Brutal Assessment */}
             <Animated.View
               entering={FadeInDown.delay(500).springify()}
               style={[
@@ -379,7 +380,7 @@ export default function ProfileScreen() {
               </Text>
             </Animated.View>
           </View>
-        )}
+        ) : null}
 
         {/* --- 3. RAW GITHUB TELEMETRY --- */}
         <Animated.View
@@ -415,7 +416,7 @@ export default function ProfileScreen() {
               const colors = [COLORS.primary, "#f97316", "#3b82f6"];
               return (
                 <TelemetryBar
-                  key={`${lang.lang}-${isSyncing}`} // Forces re-render/re-animation on sync
+                  key={`${lang.lang}-${isSyncing}`}
                   label={lang.lang}
                   percentage={lang.percentage}
                   color={colors[index % colors.length]}
@@ -436,7 +437,7 @@ export default function ProfileScreen() {
           <CornerBrackets />
           <View style={styles.sectionHeader}>
             <Ionicons name="settings" size={14} color={COLORS.primary} />
-            <Text style={styles.sectionLabel}>OPERATING PARAMETERS</Text>
+            <Text style={styles.sectionLabel}>COLLEGE PARAMETERS</Text>
           </View>
 
           <Text style={styles.inputLabel}>TRAINING GROUND / ORIGIN</Text>
@@ -449,15 +450,15 @@ export default function ProfileScreen() {
             </View>
           ) : (
             <View style={styles.warningBox}>
-              <Text style={styles.warningKicker}>[ REQUIRED ACTION ]</Text>
+              <Text style={styles.warningKicker}>[ IMMUTABLE ACTION ]</Text>
               <Text style={styles.warningText}>
-                Input origin. Warning: This action is immutable.
+                Put college name to LOCK ORIGIN. This will help the system tailor missions to your background, but CANNOT BE CHANGED LATER. Choose wisely.
               </Text>
 
               <View style={styles.burnRow}>
                 <TextInput
                   style={styles.burnInput}
-                  placeholder="e.g. NSUT, MIT, Self-Taught"
+                  placeholder="e.g. NSUT, DTU, IITD..."
                   placeholderTextColor="rgba(255, 255, 255, 0.3)"
                   value={collegeInput}
                   onChangeText={setCollegeInput}
@@ -506,7 +507,6 @@ export default function ProfileScreen() {
           style={styles.exitContainer}
         >
           <Text style={styles.kicker}>EXIT_PROTOCOLS //</Text>
-
           <View style={styles.exitButtonsRow}>
             <TouchableOpacity
               style={styles.logoutButton}
@@ -534,13 +534,9 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  // 🚀 FIXED: Reduced paddingHorizontal from 24 to 16 to stretch content wider
   content: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 100 },
-
-  // Header Component
   headerContainer: {
     paddingTop: 60,
-    // 🚀 FIXED: Matched the new wider layout
     paddingHorizontal: 16,
     marginBottom: 10,
     zIndex: 10,
@@ -559,13 +555,10 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     textTransform: "uppercase",
   },
-
-  // HUD Elements
   hudBox: {
     backgroundColor: "rgba(0,0,0,0.4)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
-    // 🚀 FIXED: Reduced internal padding from 20 to 16 to give inner content more room to breathe
     padding: 16,
     marginBottom: 20,
     position: "relative",
@@ -610,8 +603,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-
-  // Identity
   identityHeader: { flexDirection: "row", alignItems: "center", gap: 15 },
   avatarWrapper: {
     width: 75,
@@ -654,8 +645,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     letterSpacing: 1,
   },
-
-  // Shattered AI Dossier Shards
   shardContainer: { gap: 12, marginBottom: 20 },
   shardBox: {
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -689,8 +678,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: "500",
   },
-
-  // Telemetry Grid
   statGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   statBox: {
     flex: 1,
@@ -718,8 +705,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     marginVertical: 20,
   },
-
-  // Kinetic Bars
   barContainer: { marginBottom: 15 },
   barLabelRow: {
     flexDirection: "row",
@@ -744,8 +729,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
-
-  // Training Ground / Operating Parameters
   inputLabel: {
     color: COLORS.grey,
     fontSize: 10,
@@ -807,11 +790,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
-  // Exit Protocols
   exitContainer: { marginTop: 10, marginBottom: 20 },
   exitButtonsRow: { flexDirection: "row", gap: 10, marginTop: 10 },
-
   logoutButton: {
     flex: 1,
     flexDirection: "row",
@@ -830,7 +810,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-
   deleteButton: {
     flex: 1,
     flexDirection: "row",
@@ -855,10 +834,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     position: "relative",
   },
-  commandRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  commandRow: { flexDirection: "row", alignItems: "center" },
   commandTitle: {
     color: COLORS.primary,
     fontSize: 14,
@@ -870,6 +846,32 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: "600",
     marginTop: 2,
+    letterSpacing: 1,
+  },
+
+  // 🚀 NEW STYLES: AI Processing Box
+  processingBox: {
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    padding: 30,
+    marginBottom: 20,
+    position: "relative",
+    alignItems: "center",
+  },
+  processingTitle: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  processingText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: "700",
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    textAlign: "center",
     letterSpacing: 1,
   },
 });

@@ -100,7 +100,7 @@ interface AuthState {
   completeOnboarding: () => Promise<void>;
   loginWithGithub: () => Promise<void>;
   signOut: () => Promise<void>;
-  fetchProfile: (userId: string) => Promise<void>;
+  fetchProfile: (userId: string, retryCount?: number) => Promise<void>;
   burnTrainingGround: (collegeName: string) => Promise<boolean>;
   generateAiProfile: () => Promise<boolean>;
   githubStats: GithubStats | null;
@@ -373,7 +373,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  fetchProfile: async (userId: string) => {
+  fetchProfile: async (userId: string, retryCount = 0) => {
     const { data, error } = await supabase
       .from("users")
       .select("*")
@@ -385,6 +385,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
+    if (!data) {
+      // 🚀 THE CAP: Abort if we've retried 3 times (6 seconds)
+      if (retryCount >= 3) {
+        console.error(
+          "CRITICAL: Database row not found after 3 retries. Trigger failure or RLS block.",
+        );
+        return;
+      }
+
+      console.log(`Profile not found yet. Retrying... (${retryCount + 1}/3)`);
+      setTimeout(() => {
+        get().fetchProfile(userId, retryCount + 1);
+      }, 2000);
+      return;
+    }
+
+    // 🚀 THE ANTI-DOWNGRADE SHIELD
+    const currentState = get().profile;
+    if (currentState?.ai_assessment && !data.ai_assessment) {
+      console.log("Stale DB read detected. Preserving local AI state...");
+      data.ai_assessment = currentState.ai_assessment;
+      data.ai_primary_stack = currentState.ai_primary_stack;
+      data.ai_weekend_build = currentState.ai_weekend_build;
+
+      if (currentState.raw_github_data && !data.raw_github_data) {
+        data.raw_github_data = currentState.raw_github_data;
+      }
+    }
+
     if (data) {
       let repos: any[] = [];
       const rawData = data.raw_github_data;
@@ -393,7 +422,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
           repos = JSON.parse(rawData);
         } catch (e) {
-          console.error("Parse error");
+          console.error("Parse error", e);
         }
       } else if (Array.isArray(rawData)) {
         repos = rawData;
@@ -423,7 +452,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         githubStats: { repoCount, totalStars, topLanguages },
       });
 
-      // 🚀 THE FIX: Only trigger the AI if it's not already running!
+      // Only trigger the AI if it's completely empty AND not already generating
       if (!data.ai_assessment && !get().isGeneratingProfile) {
         console.log("No AI Assessment found. Igniting Forge...");
         get().generateAiProfile();
@@ -434,14 +463,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   generateAiProfile: async () => {
     const { user, profile, isGeneratingProfile } = get();
 
-    // Prevent duplicate AI calls
     if (isGeneratingProfile) return false;
 
     const githubHandle =
       profile?.github_handle || user?.user_metadata?.user_name;
     if (!user || !githubHandle) return false;
 
-    // 🚀 Lock the Forge so it doesn't fire twice
     set({ isGeneratingProfile: true });
 
     try {
@@ -459,9 +486,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (error) throw error;
 
-      // 🚀 THE FIX: Instant UI Injection!
-      // We don't wait for the database to settle. We take the response straight from
-      // the Edge Function and manually stitch it into the UI so the user sees it instantly.
+      // Optimistically update the UI instantly
       if (data?.profile) {
         set((state) => ({
           profile: state.profile
@@ -475,15 +500,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }));
       }
 
-      // We still run fetchProfile in the background to grab the updated GitHub Stats
-      await get().fetchProfile(user.id);
+      // 🚀 THE DELAY TACTIC
+      // We wait 3 seconds before fetching the profile again to ensure Postgres has
+      // fully committed the new AI data and GitHub raw stats to the database replicas.
+      setTimeout(() => {
+        get().fetchProfile(user.id);
+      }, 3000);
 
       return true;
     } catch (err: any) {
       console.error("Forge Ignition Failed:", err.message);
       return false;
     } finally {
-      // 🚀 Unlock the Forge when finished
       set({ isGeneratingProfile: false });
     }
   },
