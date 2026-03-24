@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Stack, useRouter, Href } from "expo-router";
+import { Stack, useRouter, useSegments, Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import * as Notifications from "expo-notifications";
@@ -7,7 +7,7 @@ import { COLORS } from "../constants/theme";
 import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
 
-// 🚀 FIXED: Replaced legacy 'shouldShowAlert' with modern Banner and List properties
+// 🚀 FIXED: Modern Notification Handler configuration
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => ({
     shouldShowBanner: true,
@@ -19,7 +19,10 @@ Notifications.setNotificationHandler({
 
 export default function RootLayout() {
   const router = useRouter();
-  const { registerDeviceToken } = useAuthStore();
+  const segments = useSegments();
+
+  // 🚀 Pulling session and initialization state alongside the token register
+  const { registerDeviceToken, session, isInitialized } = useAuthStore();
 
   useEffect(() => {
     // 1. Establish System Background Identity
@@ -28,9 +31,9 @@ export default function RootLayout() {
     // 2. Sync Push Token on Auth State Change
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
       // If a session exists, sync the token to the database
-      if (session) {
+      if (currentSession) {
         registerDeviceToken();
       }
     });
@@ -41,10 +44,9 @@ export default function RootLayout() {
         (response: Notifications.NotificationResponse) => {
           const data = response.notification.request.content.data;
 
-          // 🚀 ROUTING PROTOCOL: If the payload contains a route, jump to it
+          // ROUTING PROTOCOL: If the payload contains a route, jump to it
           if (data && typeof data.route === "string") {
             console.log(`ROUTING PROTOCOL: Executing jump to /${data.route}`);
-            // Cast to Href to satisfy Expo Router's strict TypeScript checks
             router.push(`/${data.route}` as Href);
           }
         },
@@ -57,6 +59,25 @@ export default function RootLayout() {
     };
   }, [registerDeviceToken, router]);
 
+  // 🚀 THE FIX: The Global Traffic Cop (Auth Guard)
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    // 🚀 Downcast the segments array to standard strings to satisfy strict TypeScript
+    const routeSegments = segments as string[];
+    const rootSegment = routeSegments[0];
+
+    // Safely evaluate the strings
+    const inAuthGroup = rootSegment === "(auth)";
+    const isIndexScreen = routeSegments.length === 0 || rootSegment === "index";
+
+    // If the user IS logged in, but they are stuck on the login screen or the root index
+    if (session && (inAuthGroup || isIndexScreen)) {
+      console.log("SESSION DETECTED: Rerouting to Arena //");
+      router.replace("/(tabs)" as Href);
+    }
+  }, [session, isInitialized, segments, router]);
+
   return (
     <>
       <StatusBar style="light" />
@@ -68,25 +89,14 @@ export default function RootLayout() {
           animation: "fade",
         }}
       >
-        {/* The Traffic Cop */}
         <Stack.Screen name="index" />
-
-        {/* The High-End Introduction */}
         <Stack.Screen name="onboarding" />
-
-        {/* The Authentication Flow */}
         <Stack.Screen name="(auth)" />
-
-        {/* The Main Application (Protected) */}
         <Stack.Screen name="(tabs)" />
-
-        {/* 👇 Tells the router to treat the dossier screen as a slide-up modal */}
         <Stack.Screen
           name="dossier"
           options={{ presentation: "modal", headerShown: false }}
         />
-
-        {/* 👇 Added CommandCenter as a standard pushed screen */}
         <Stack.Screen name="command-center" />
       </Stack>
     </>

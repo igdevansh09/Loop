@@ -1,50 +1,193 @@
-# Welcome to your Expo app 👋
+<div align="center">
+  <img src="./assets/images/icon.png" alt="Loop Logo" width="120" height="120"/>
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+  # Loop 🔄
+  ### AI-Powered Hackathon MatchMaking Platform
 
-## Get started
+  <p><b>Discover. Analyze. Connect.</b></p>
 
-1. Install dependencies
+  <p>
+    <img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"/>
+    <img src="https://img.shields.io/badge/Expo-1B1F23?style=for-the-badge&logo=expo&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white"/>
+    <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Zustand-443E38?style=for-the-badge&logo=react&logoColor=white"/>
+  </p>
+</div>
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## 📖 Overview
 
-   ```bash
-   npx expo start
-   ```
+**Loop** is a high-performance mobile application designed to rethink how users discover and connect with opportunities.
 
-In the output, you'll find options to open the app in a
+Built using **React Native (Expo)** with a **Supabase backend**, it combines:
+- Gesture-based discovery (swipe interface)
+- Real-time data sync
+- Serverless AI-driven profile generation
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+This is not just a UI project — it demonstrates **scalable architecture, real-time systems, and edge computing integration**.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 🚀 Demo
 
-When you're ready, run:
+- 📱 APK: https://example.com/dummy-apk-link  
+- 🎥 Demo Video: https://example.com/dummy-video-link  
+
+---
+
+## ✨ Technical Highlights
+
+### ⚡ Edge Functions
+- `analyze-signal` → processes user interactions  
+- `generate-profile` → builds AI-enhanced profiles  
+- Runs on Supabase Edge (Deno)
+
+### 🧠 State Management
+- Zustand modular stores:
+  - `useAuthStore`
+  - `useArenaStore`
+  - `useLedgerStore`
+  - `useLaunchStore`
+
+### 🎯 UI/UX
+- Tinder-style swipe system  
+- Built with Reanimated + Gesture Handler  
+- Smooth, native performance  
+
+### 🔄 Real-Time
+- Supabase subscriptions for:
+  - Inbound requests  
+  - Outbound actions  
+  - Notifications  
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- React Native (Expo)
+- Expo Router
+- TypeScript
+- Zustand
+- Reanimated + Gesture Handler
+
+### Backend
+- Supabase (PostgreSQL + RLS)
+- Supabase Auth
+- Edge Functions (Deno)
+- Real-time subscriptions
+
+---
+
+## 📱 Core Features
+
+### 🏟 Arena
+- Swipe-based discovery  
+- Adaptive matching via interaction signals  
+
+### 📥📤 Ledger
+- Track inbound & outbound connections  
+- Detailed profile analytics (Dossier view)  
+
+### ⚙️ Command Center
+- AI-generated profiles  
+- Account & system control  
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- npm / yarn
+- Expo CLI
+- Supabase CLI (optional)
+
+---
+
+### 1. Clone
 
 ```bash
-npm run reset-project
+git clone https://github.com/igdevansh09/loop.git
+cd loop
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2\. Install dependencies
 
-## Learn more
+Bash
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+npm install
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```
 
-## Join the community
+### 3\. Environment Setup
 
-Join our community of developers creating universal apps.
+Create a `.env` file in the root directory with your Supabase credentials:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Code snippet
+
+```
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+```
+
+### 4\. Deploy Edge Functions (Optional)
+
+Bash
+
+```
+supabase functions deploy analyze-signal
+supabase functions deploy generate-profile
+supabase functions deploy push-notification
+
+```
+
+### 5\. Run the App
+
+Bash
+
+```
+npx expo start
+
+```
+
+Scan the QR code with the Expo Go app on your physical device, or press `a` to run on an Android emulator / `i` for iOS simulator.
+
+* * * * *
+
+🗂️ Project Structure
+---------------------
+
+Plaintext
+
+```
+loop/
+├── src/
+│   ├── app/                  # Expo Router navigation
+│   │   ├── (auth)/           # Authentication screens
+│   │   ├── (tabs)/           # Main tab navigation (Arena, Inbound, Profile)
+│   │   └── command-center.tsx# Standalone screens
+│   ├── components/           # Reusable UI (SwiperCard, InboundCard, Dossier)
+│   ├── constants/            # Theming and app constants
+│   ├── lib/                  # Core libraries (Supabase client init)
+│   └── store/                # Zustand global state slices
+├── supabase/
+│   ├── functions/            # Deno Edge Functions
+│   │   ├── analyze-signal/
+│   │   ├── generate-profile/
+│   │   └── push-notification/
+└── assets/                   # Images, fonts, and icons
+
+```
+
+* * * * *
+
+<div align="center">
+
+<i>Developed with ❤️ by <a href="https://www.google.com/search?q=https://github.com/igdevansh09">Devansh Gupta</a></i>
+
+</div>
