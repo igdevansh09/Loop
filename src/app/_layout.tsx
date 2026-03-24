@@ -7,7 +7,6 @@ import { COLORS } from "../constants/theme";
 import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
 
-// 🚀 FIXED: Modern Notification Handler configuration
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => ({
     shouldShowBanner: true,
@@ -21,30 +20,25 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
 
-  // 🚀 Pulling session and initialization state alongside the token register
   const { registerDeviceToken, session, isInitialized } = useAuthStore();
 
   useEffect(() => {
-    // 1. Establish System Background Identity
     SystemUI.setBackgroundColorAsync(COLORS.background);
 
-    // 2. Sync Push Token on Auth State Change
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      // If a session exists, sync the token to the database
       if (currentSession) {
         registerDeviceToken();
       }
     });
 
-    // 3. Listen for Physical Notification Taps
     const responseListener =
       Notifications.addNotificationResponseReceivedListener(
         (response: Notifications.NotificationResponse) => {
           const data = response.notification.request.content.data;
 
-          // ROUTING PROTOCOL: If the payload contains a route, jump to it
+          
           if (data && typeof data.route === "string") {
             console.log(`ROUTING PROTOCOL: Executing jump to /${data.route}`);
             router.push(`/${data.route}` as Href);
@@ -52,26 +46,26 @@ export default function RootLayout() {
         },
       );
 
-    // Cleanup listeners when layout unmounts
+    
     return () => {
       subscription.unsubscribe();
       responseListener.remove();
     };
   }, [registerDeviceToken, router]);
 
-  // 🚀 THE FIX: The Global Traffic Cop (Auth Guard)
+  
   useEffect(() => {
     if (!isInitialized) return;
 
-    // 🚀 Downcast the segments array to standard strings to satisfy strict TypeScript
+    
     const routeSegments = segments as string[];
     const rootSegment = routeSegments[0];
 
-    // Safely evaluate the strings
+    
     const inAuthGroup = rootSegment === "(auth)";
     const isIndexScreen = routeSegments.length === 0 || rootSegment === "index";
 
-    // If the user IS logged in, but they are stuck on the login screen or the root index
+    
     if (session && (inAuthGroup || isIndexScreen)) {
       console.log("SESSION DETECTED: Rerouting to Arena //");
       router.replace("/(tabs)" as Href);
@@ -85,7 +79,7 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: COLORS.background },
-          // Smooth crossfade transitions between major app sections
+          
           animation: "fade",
         }}
       >

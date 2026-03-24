@@ -26,7 +26,7 @@ import { useLaunchStore } from "../../store/useLaunchStore";
 
 const springConfig = { damping: 15, stiffness: 100 };
 
-// --- 1. HUD Corner Brackets ---
+
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
     <View style={[styles.corner, styles.topLeft, { borderColor: color }]} />
@@ -36,7 +36,7 @@ const CornerBrackets = ({ color = COLORS.primary }) => (
   </View>
 );
 
-// --- 2. Custom Brutalist Input ---
+
 const TerminalInput = ({
   label,
   multiline = false,
@@ -68,7 +68,7 @@ const TerminalInput = ({
   );
 };
 
-// --- 3. Terminal Dropdown ---
+
 const TerminalSelect = ({ label, value, options, onSelect }: any) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -122,7 +122,7 @@ const TerminalSelect = ({ label, value, options, onSelect }: any) => {
   );
 };
 
-// --- 4. StackOverflow Live Tag Fetcher ---
+
 const TerminalSkillInput = () => {
   const {
     requiredSkills,
@@ -135,7 +135,7 @@ const TerminalSkillInput = () => {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
-  // Debounce the API call in the component, execute in the store
+  
   useEffect(() => {
     const timeoutId = setTimeout(() => fetchSkillSuggestions(query), 500);
     return () => clearTimeout(timeoutId);
@@ -227,7 +227,7 @@ export default function CreateTeamScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
 
-  // 🚀 Pulling all form state directly from the Brain
+  
   const {
     projectName,
     hackathonUrl,
@@ -301,7 +301,6 @@ export default function CreateTeamScreen() {
         end={{ x: 0.5, y: 0.25 }}
       />
 
-      {/* HEADER */}
       <Animated.View
         entering={FadeInDown.delay(100).springify().damping(15)}
         style={styles.headerContainer}
@@ -315,7 +314,7 @@ export default function CreateTeamScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* 1. THE CORE */}
+        {}
         <Animated.View
           entering={FadeInDown.delay(200)
             .springify()
@@ -342,7 +341,6 @@ export default function CreateTeamScreen() {
           />
         </Animated.View>
 
-        {/* 2. CONSTRAINTS */}
         <Animated.View
           entering={FadeInDown.delay(300)
             .springify()
@@ -382,7 +380,6 @@ export default function CreateTeamScreen() {
           </View>
         </Animated.View>
 
-        {/* 3. LOCKED REWARD */}
         <Animated.View
           entering={FadeInDown.delay(400)
             .springify()
@@ -410,7 +407,6 @@ export default function CreateTeamScreen() {
           />
         </Animated.View>
 
-        {/* 4. ARCHITECTURE */}
         <Animated.View
           entering={FadeInDown.delay(500)
             .springify()
@@ -435,7 +431,6 @@ export default function CreateTeamScreen() {
           />
         </Animated.View>
 
-        {/* 5. THE CALIBRATOR */}
         <Animated.View
           layout={Layout.springify()}
           entering={FadeInDown.delay(600)
@@ -568,7 +563,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
-  // 🚀 ALIGNMENT LOCK: Matches Profile headerContainer exactly
+  
   headerContainer: {
     paddingTop: 60,
     paddingHorizontal: 16,
@@ -583,26 +578,26 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   headerTitle: {
-    fontSize: 36, // Matched to Profile 'header'
+    fontSize: 36, 
     fontWeight: "900",
     color: COLORS.white,
     letterSpacing: -1,
     textTransform: "uppercase",
   },
 
-  // 🚀 CONTENT LOCK: Matched Profile content layout
+  
   content: {
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 120,
   },
 
-  // HUD Framework (The "Box" look)
+  
   hudBox: {
     backgroundColor: "rgba(0,0,0,0.4)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
-    padding: 16, // Matched Profile hudBox internal padding
+    padding: 16, 
     marginBottom: 20,
     position: "relative",
   },
@@ -660,7 +655,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // Input Elements
+  
   inputWrapper: { marginBottom: 15 },
   inputLabel: {
     color: COLORS.grey,
@@ -694,7 +689,7 @@ const styles = StyleSheet.create({
   },
   textArea: { minHeight: 120 },
 
-  // Dropdowns & Selectors
+  
   dropdownMenu: {
     position: "absolute",
     top: "100%",
@@ -713,7 +708,7 @@ const styles = StyleSheet.create({
   },
   inputLoader: { position: "absolute", right: 16, top: 16 },
 
-  // Chips
+  
   chipContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -736,7 +731,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  // Calibrator & Buttons
+  
   analyzeButton: {
     backgroundColor: COLORS.white,
     padding: 18,

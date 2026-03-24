@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from "react-native";
-import { useRouter } from "expo-router"; // 🚀 CHANGED: Using the programmatic router instead of Redirect
+import { useRouter } from "expo-router"; 
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   FadeInDown,
@@ -29,19 +29,19 @@ export default function LoginScreen() {
   const router = useRouter();
   const { loginWithGithub, isAuthenticating, session } = useAuthStore();
 
-  // 🚀 THE FIX: This combines the active API call with the routing delay.
-  // Even if the API finishes, the button stays spinning until the Arena screen fully paints.
+  
+  
   const isProcessing = isAuthenticating || !!session;
 
-  // 🚀 THE FIX: Programmatic background routing
+  
   useEffect(() => {
     if (session) {
-      // Use replace() so the user can't swipe back to the login screen
+      
       router.replace("/");
     }
   }, [session, router]);
 
-  // --- The Explosion Physics ---
+  
   const flashOpacity = useSharedValue(1);
   const iconScale = useSharedValue(4);
   const iconY = useSharedValue(-height / 2);
@@ -82,8 +82,8 @@ export default function LoginScreen() {
 
   const brutalSpring = { damping: 14, stiffness: 120, mass: 0.8 };
 
-  // Notice we completely removed the `if (session) return <Redirect />` block!
-  // We want React to render everything below so the transition is fluid.
+  
+  
 
   return (
     <View style={styles.container}>
@@ -142,10 +142,10 @@ export default function LoginScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 await loginWithGithub();
               }}
-              disabled={isProcessing} // 🚀 Using the new lock here
+              disabled={isProcessing} 
               activeOpacity={0.8}
             >
-              {isProcessing ? ( // 🚀 Using the new lock here
+              {isProcessing ? ( 
                 <View style={styles.buttonContent}>
                   <ActivityIndicator color={COLORS.background} size="small" />
                   <Text style={styles.buttonText}>INITIATING HANDSHAKE...</Text>

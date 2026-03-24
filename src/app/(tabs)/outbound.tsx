@@ -30,7 +30,6 @@ export default function OutboundScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Deep Atmospheric Glow */}
       <LinearGradient
         colors={[`${COLORS.primary}10`, "transparent"]}
         style={StyleSheet.absoluteFillObject}
@@ -38,7 +37,6 @@ export default function OutboundScreen() {
         end={{ x: 0.5, y: 0.4 }}
       />
 
-      {/* Static Header */}
       <View style={styles.headerContainer}>
         <Animated.View entering={FadeInDown.delay(100).springify()}>
           <Text style={styles.kicker}>PROTOCOL // OUT</Text>
@@ -85,7 +83,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
-  // 16px Gutter Standard
+  
   headerContainer: {
     paddingTop: 60,
     paddingHorizontal: 16,
@@ -113,7 +111,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
 
-  // Brutalist Empty State
+  
   emptyState: {
     marginTop: 60,
     alignItems: "center",

@@ -7,7 +7,7 @@ interface LedgerState {
   outbound: any[];
   isLoading: boolean;
   
-  // Actions
+  
   fetchLedger: (userId: string) => Promise<void>;
   updateRequest: (requestId: string, status: 'accepted' | 'rejected' | 'withdrawn') => Promise<void>;
   triggerKillswitch: (teamId: string) => Promise<void>;
@@ -25,7 +25,7 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
   fetchLedger: async (userId: string) => {
     set({ isLoading: true });
     try {
-      // 1. Fetch Inbound (People wanting to join your teams)
+      
       const { data: inboundData, error: inboundError } = await supabase
         .from('swipes')
         .select(`
@@ -38,7 +38,7 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
 
       if (inboundError) console.error("Inbound Error:", inboundError);
 
-      // 2. Fetch Outbound (Teams you swiped right on)
+      
       const { data: outboundData, error: outboundError } = await supabase
         .from('swipes')
         .select(`
@@ -67,7 +67,7 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
       } else {
         await supabase.from('swipes').update({ status }).eq('id', requestId);
       }
-      // Refresh local state
+      
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (userId) get().fetchLedger(userId);
     } catch (err) {
@@ -75,9 +75,9 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
     }
   },
 
-  // 🚀 Action 1: Terminate the Project
+  
   triggerKillswitch: async (teamId: string) => {
-  // 🚀 OPTIMISTIC UPDATE: Change state instantly in the UI
+  
   const previousTeams = get().myTeams;
   const optimisticTeams = previousTeams.map(t => 
     t.id === teamId ? { ...t, is_active: false } : t
@@ -95,18 +95,18 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
 
     if (error) throw error;
     
-    // Final sync to ensure headcount and status are perfect
+    
     get().fetchMyTeams(user.id);
   } catch (err) {
     console.error("Killswitch Failed:", err);
-    // Rollback on failure
+    
     set({ myTeams: previousTeams });
     Alert.alert("SYSTEM_ERROR", "Failed to terminate link. Connection unstable.");
   }
 },
 
 updateCapacity: async (teamId: string, newCapacity: number) => {
-  // 🚀 OPTIMISTIC UPDATE: Adjust capacity instantly
+  
   const previousTeams = get().myTeams;
   const optimisticTeams = previousTeams.map(t => 
     t.id === teamId ? { ...t, max_capacity: newCapacity } : t
@@ -139,7 +139,7 @@ updateCapacity: async (teamId: string, newCapacity: number) => {
       accepted_count:swipes(count)
     `)
     .eq('founder_id', userId)
-    .eq('swipes.status', 'accepted'); // This gets the count of accepted members
+    .eq('swipes.status', 'accepted'); 
 
   if (!error) set({ myTeams: data || [] });
 },

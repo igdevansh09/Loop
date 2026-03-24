@@ -61,7 +61,6 @@ export const InboundCard = ({
       <CornerBrackets />
 
       <View style={styles.cardLayout}>
-        {/* LEFT: Core Intel */}
         <View style={styles.intelBlock}>
           <Text style={styles.kicker} numberOfLines={1}>
             TARGET // {item.teams?.project_name?.toUpperCase() || "UNKNOWN"}
@@ -74,13 +73,11 @@ export const InboundCard = ({
             </Text>
           </View>
 
-          {/* 🚀 RESTORED: Expanding AI Summary / Primary Stack */}
           <Text style={styles.stackText}>
             {item.profiles.ai_primary_stack || "UNSET"}
           </Text>
         </View>
 
-        {/* RIGHT: Quick Actions */}
         <View style={styles.actionBlock}>
           <TouchableOpacity
             style={[styles.actionBtn, styles.rejectBtn]}
@@ -137,11 +134,11 @@ const styles = StyleSheet.create({
   cardLayout: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center", // Action buttons will stay centered even if text gets tall
+    alignItems: "center", 
     gap: 15,
   },
   intelBlock: {
-    flex: 1, // Takes up remaining space so buttons don't get squished
+    flex: 1, 
     justifyContent: "center",
   },
   actionBlock: {
@@ -168,7 +165,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.5,
   },
-  // 🚀 FIXED: Allowed wrapping and gave it line-height for readability
+  
   stackText: {
     color: COLORS.grey,
     fontSize: 10,

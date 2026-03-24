@@ -52,7 +52,6 @@ export default function InboundScreen() {
         end={{ x: 0.5, y: 0.4 }}
       />
 
-      {/* Static Header */}
       <View style={styles.headerContainer}>
         <Animated.View entering={FadeInDown.delay(100).springify()}>
           <Text style={styles.kicker}>PROTOCOL // IN</Text>
@@ -80,7 +79,7 @@ export default function InboundScreen() {
               <InboundCard
                 item={item}
                 onAction={updateRequest}
-                // 2. Catch the tap and save the intel to state
+                
                 onOpenModal={() => setSelectedIntel(item)}
               />
             </Animated.View>
@@ -95,9 +94,9 @@ export default function InboundScreen() {
         )}
       </ScrollView>
       <ApplicantModal
-        visible={!!selectedIntel} // Converts object to true, null to false
+        visible={!!selectedIntel} 
         applicant={selectedIntel}
-        onClose={() => setSelectedIntel(null)} // Clears state to close modal
+        onClose={() => setSelectedIntel(null)} 
       />
     </View>
   );
@@ -106,7 +105,7 @@ export default function InboundScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
 
-  // 16px Gutter Standard
+  
   headerContainer: {
     paddingTop: 60,
     paddingHorizontal: 16,
@@ -130,7 +129,7 @@ const styles = StyleSheet.create({
 
   content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 100 },
 
-  // Brutalist Empty State
+  
   emptyState: { marginTop: 60, alignItems: "center", justifyContent: "center" },
   emptyText: {
     color: "rgba(255, 255, 255, 0.2)",

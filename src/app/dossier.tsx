@@ -33,7 +33,7 @@ export default function DossierScreen() {
   const [isDecrypting, setIsDecrypting] = useState(true);
   const [isExpunged, setIsExpunged] = useState(false);
 
-  // 🚀 NEW SECURITY STATES
+  
   const [isUnauthenticated, setIsUnauthenticated] = useState(false);
   const [isFounder, setIsFounder] = useState(false);
 
@@ -62,7 +62,7 @@ export default function DossierScreen() {
           data: { user },
         } = await supabase.auth.getUser();
 
-        // 🚀 BOUNCER CHECK 1: Ghost User (Unauthenticated)
+        
         if (!user) {
           setIsUnauthenticated(true);
           setIsDecrypting(false);
@@ -77,7 +77,7 @@ export default function DossierScreen() {
         if (!error && data && data.length > 0) {
           const team = data[0];
 
-          // 🚀 BOUNCER CHECK 2: Is this the Founder opening their own link?
+          
           if (team.founder_id === user.id) {
             setIsFounder(true);
           }
@@ -120,7 +120,7 @@ export default function DossierScreen() {
       });
       setIsDecrypting(false);
 
-      // Still run background check to verify founder status if navigating from feed
+      
       fetchIntel();
     } else {
       fetchIntel();
@@ -149,9 +149,9 @@ export default function DossierScreen() {
     }
   };
 
-  // --------------------------------------------------------
-  // 🛡️ SECURITY STATE RENDERERS
-  // --------------------------------------------------------
+  
+  
+  
   if (isUnauthenticated) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -162,7 +162,7 @@ export default function DossierScreen() {
         </Text>
         <TouchableOpacity
           style={styles.returnButton}
-          onPress={() => router.replace("/login")} // 🚀 Adjust this to your actual login route
+          onPress={() => router.replace("/login")} 
         >
           <Text style={styles.returnText}>AUTHENTICATE NOW</Text>
         </TouchableOpacity>
@@ -200,9 +200,9 @@ export default function DossierScreen() {
   const safeMatch =
     isNaN(Number(dossier.match)) && dossier.match !== "?" ? "0" : dossier.match;
 
-  // --------------------------------------------------------
-  // 🟢 MAIN RENDERER
-  // --------------------------------------------------------
+  
+  
+  
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -354,7 +354,7 @@ export default function DossierScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* 🚀 SMART RENDERER: Disables application if you are the Founder */}
+        {}
         <Animated.View entering={FadeInDown.delay(600).springify()}>
           {isFounder ? (
             <View style={styles.founderBadge}>
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  // 🚀 FOUNDER STATE STYLE
+  
   founderBadge: {
     flexDirection: "row",
     justifyContent: "center",

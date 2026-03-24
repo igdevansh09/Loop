@@ -35,7 +35,7 @@ interface ExtendedProfile extends UserProfile {
   ai_weekend_build: string | null;
 }
 
-// --- 1. HUD Corner Brackets ---
+
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
     <View style={[styles.corner, styles.topLeft, { borderColor: color }]} />
@@ -45,7 +45,7 @@ const CornerBrackets = ({ color = COLORS.primary }) => (
   </View>
 );
 
-// --- 2. Kinetic Typewriter ---
+
 const TypewriterText = ({ text, delay = 0, style, ...props }: any) => {
   const [displayedText, setDisplayedText] = useState("");
 
@@ -78,7 +78,7 @@ const TypewriterText = ({ text, delay = 0, style, ...props }: any) => {
   );
 };
 
-// --- 3. Kinetic Telemetry Bar ---
+
 const TelemetryBar = ({ label, percentage, color, delay }: any) => {
   const barWidth = useSharedValue(0);
 
@@ -117,7 +117,7 @@ export default function ProfileScreen() {
     generateAiProfile,
     signOut,
     deleteAccount,
-    isGeneratingProfile, // 🚀 NEW: Extracted the AI Lock
+    isGeneratingProfile, 
   } = useAuthStore();
 
   const router = useRouter();
@@ -230,7 +230,6 @@ export default function ProfileScreen() {
           />
         }
       >
-        {/* --- 1. IDENTITY MATRIX --- */}
         <Animated.View
           entering={FadeInDown.delay(200).springify()}
           style={styles.hudBox}
@@ -278,7 +277,6 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* COMMAND CENTER ACCESS UNIT */}
         <Animated.View entering={FadeInDown.delay(250).springify()}>
           <TouchableOpacity
             style={styles.commandCenterLink}
@@ -305,9 +303,8 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* --- 2. AI DOSSIER (SHATTERED SHARDS OR ACTIVE FORGE) --- */}
         {isGeneratingProfile ? (
-          // 🚀 THE BONUS: AI Loading Visual
+          
           <Animated.View
             entering={FadeInDown.springify()}
             style={styles.processingBox}
@@ -326,7 +323,7 @@ export default function ProfileScreen() {
             />
           </Animated.View>
         ) : isVerified ? (
-          // Regular Shards if generation is complete
+          
           <View style={styles.shardContainer}>
             <Animated.View
               entering={FadeInDown.delay(300).springify()}
@@ -382,7 +379,6 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
-        {/* --- 3. RAW GITHUB TELEMETRY --- */}
         <Animated.View
           entering={FadeInDown.delay(600).springify()}
           style={styles.hudBox}
@@ -429,7 +425,6 @@ export default function ProfileScreen() {
           )}
         </Animated.View>
 
-        {/* --- 4. OPERATING PARAMETERS (Origin Lock) --- */}
         <Animated.View
           entering={FadeInDown.delay(700).springify()}
           style={styles.hudBox}
@@ -501,7 +496,6 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* --- 5. EXIT PROTOCOLS --- */}
         <Animated.View
           entering={FadeInDown.delay(800).springify()}
           style={styles.exitContainer}
@@ -849,7 +843,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  // 🚀 NEW STYLES: AI Processing Box
+  
   processingBox: {
     backgroundColor: "rgba(0,0,0,0.6)",
     borderWidth: 1,

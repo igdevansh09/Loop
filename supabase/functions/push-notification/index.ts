@@ -6,7 +6,7 @@ serve(async (req) => {
     const payload = await req.json();
     const { type, record, old_record } = payload;
 
-    // Initialize Supabase Admin Client to bypass RLS and fetch data
+    
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -15,9 +15,9 @@ serve(async (req) => {
     let targetUserId = null;
     let pushTitle = "";
     let pushBody = "";
-    let targetRoute = ""; // 🚀 ADDED: Dynamic routing
+    let targetRoute = ""; 
 
-    // 🚀 SCENARIO 1: User Applies (INSERT) -> Notify Founder
+    
     if (type === "INSERT" && record.status === "pending") {
       const { data: team } = await supabase
         .from("teams")
@@ -25,7 +25,7 @@ serve(async (req) => {
         .eq("id", record.team_id)
         .single();
 
-      // 🚀 FIXED: Query the 'users' table, not 'profiles'
+      
       const { data: profile } = await supabase
         .from("users")
         .select("github_handle")
@@ -35,10 +35,10 @@ serve(async (req) => {
       targetUserId = team?.founder_id;
       pushTitle = "INBOUND SIGNAL //";
       pushBody = `@${profile?.github_handle || "Unknown"} applied to join ${team?.project_name?.toUpperCase()} hackathon.`;
-      targetRoute = "inbound"; // 🚀 Routes Founder to their inbound requests
+      targetRoute = "inbound"; 
     }
 
-    // 🚀 SCENARIO 2: Status Changes (UPDATE) -> Notify Applicant
+    
     else if (type === "UPDATE" && record.status !== old_record?.status) {
       const { data: team } = await supabase
         .from("teams")
@@ -47,7 +47,7 @@ serve(async (req) => {
         .single();
 
       targetUserId = record.swiper_id;
-      targetRoute = "outbound"; // 🚀 Routes Applicant to their outbound status
+      targetRoute = "outbound"; 
 
       if (record.status === "accepted") {
         pushTitle = "UPLINK SECURED //";
@@ -62,7 +62,7 @@ serve(async (req) => {
       return new Response("No action required", { status: 200 });
     }
 
-    // --- EXECUTE THE PUSH ---
+    
     if (!targetUserId)
       return new Response("Missing target user", { status: 400 });
 
@@ -77,13 +77,13 @@ serve(async (req) => {
       return new Response("Target has no push tokens", { status: 200 });
     }
 
-    // Construct the Expo Push Messages
+    
     const messages = tokens.map((token: string) => ({
       to: token,
       sound: "default",
       title: pushTitle,
       body: pushBody,
-      data: { route: targetRoute }, // 🚀 FIXED: Uses the dynamic route based on the scenario
+      data: { route: targetRoute }, 
     }));
 
     // Fire to Expo Servers

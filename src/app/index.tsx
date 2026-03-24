@@ -27,12 +27,12 @@ export default function InitialRouting() {
     );
   }
 
-  // The 3-Way Routing Decision
+  
   if (session) {
-    return <Redirect href="/(tabs)" />; // Logged in? Go to Arena.
+    return <Redirect href="/(tabs)" />; 
   } else if (hasSeenOnboarding) {
-    return <Redirect href="/(auth)/login" />; // Been here before? Skip to Login.
+    return <Redirect href="/(auth)/login" />; 
   } else {
-    return <Redirect href="/onboarding" />; // First time ever? Show the Pitch.
+    return <Redirect href="/onboarding" />; 
   }
 }

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 
 interface LaunchState {
-  // Form State
+  
   projectName: string;
   hackathonUrl: string;
   requiredSkills: string[];
@@ -12,7 +12,7 @@ interface LaunchState {
   communityUrl: string;
   description: string;
   
-  // API & Calibrator State
+  
   skillSuggestions: string[];
   isFetchingSkills: boolean;
   isAnalyzing: boolean;
@@ -21,7 +21,7 @@ interface LaunchState {
   aiFeedback: string | null;
   vectorData: any | null;
 
-  // Actions
+  
   setField: (field: string, value: any) => void;
   addSkill: (skill: string) => void;
   removeSkill: (skill: string) => void;
@@ -61,7 +61,7 @@ export const useLaunchStore = create<LaunchState>((set, get) => ({
 
   addSkill: (skill) => set((state) => ({ 
     requiredSkills: [...state.requiredSkills, skill],
-    skillSuggestions: [] // Clear suggestions on add
+    skillSuggestions: [] 
   })),
 
   removeSkill: (skill) => set((state) => ({
@@ -90,18 +90,18 @@ export const useLaunchStore = create<LaunchState>((set, get) => ({
   analyzeSignal: async (description: string) => {
     set({ isAnalyzing: true, aiFeedback: "", signalScore: null });
     try {
-      // 1. FORCE EXTRACT THE FRESHEST TOKEN
+      
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
         throw new Error("Authentication missing. The Gateway rejected you.");
       }
 
-      // 2. INJECT IT DIRECTLY INTO THE HEADERS
+      
       const { data, error } = await supabase.functions.invoke("analyze-signal", {
         body: { text: description },
         headers: {
-          Authorization: `Bearer ${session.access_token}`, // Force the JWT
+          Authorization: `Bearer ${session.access_token}`, 
         }
       });
 
@@ -127,7 +127,7 @@ export const useLaunchStore = create<LaunchState>((set, get) => ({
     const state = get();
     set({ isSubmitting: true });
     try {
-      // 🚀 FIXED: Store handles pulling its own data for the insert
+      
       const { error } = await supabase.from("teams").insert({
         founder_id: founderId,
         founder_github: founderGithub,
@@ -143,7 +143,7 @@ export const useLaunchStore = create<LaunchState>((set, get) => ({
       });
 
       if (error) throw error;
-      get().resetState(); // Clear form on success
+      get().resetState(); 
     } catch (err: any) {
       throw err;
     } finally {

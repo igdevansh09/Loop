@@ -19,7 +19,7 @@ import { COLORS } from "../constants/theme";
 import { useAuthStore } from "../store/useAuthStore";
 import { useLedgerStore } from "../store/useLedgerStore";
 
-// --- 1. TYPES & INTERFACES ---
+
 interface MissionTeam {
   id: string;
   project_name: string;
@@ -32,7 +32,7 @@ interface LocalCapacities {
   [key: string]: string;
 }
 
-// --- 2. HUD COMPONENTS ---
+
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
     <View style={[styles.corner, styles.topLeft, { borderColor: color }]} />
@@ -55,14 +55,14 @@ export default function CommandCenterScreen() {
 
   const [localCapacities, setLocalCapacities] = useState<LocalCapacities>({});
 
-  // Sync with Satellite on Mount
+  
   useEffect(() => {
     if (user?.id) {
       fetchMyTeams(user.id);
     }
   }, [user?.id]);
 
-  // --- 3. ACTION HANDLERS ---
+  
 
   const handleUpdateCap = (teamId: string, currentName: string) => {
     const rawVal = localCapacities[teamId];
@@ -84,7 +84,7 @@ export default function CommandCenterScreen() {
           onPress: async () => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             await updateCapacity(teamId, newCap);
-            setLocalCapacities({ ...localCapacities, [teamId]: "" }); // Clear input
+            setLocalCapacities({ ...localCapacities, [teamId]: "" }); 
           },
         },
       ],
@@ -117,7 +117,7 @@ export default function CommandCenterScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      {/* HEADER SECTION */}
+      {}
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={18} color={COLORS.primary} />
@@ -151,7 +151,7 @@ export default function CommandCenterScreen() {
             const acceptedCount = team.accepted_count?.[0]?.count || 0;
             const isActive = team.is_active;
 
-            // 🚀 Logic: Highlight red if capacity is dangerously low
+            
             const isOverCapacity = acceptedCount > team.max_capacity;
             const statusColor = isActive ? COLORS.primary : "#ef4444";
 
@@ -163,7 +163,6 @@ export default function CommandCenterScreen() {
               >
                 <CornerBrackets />
 
-                {/* CARD HEADER */}
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.teamKicker, { color: statusColor }]}>
@@ -194,7 +193,6 @@ export default function CommandCenterScreen() {
                   </View>
                 </View>
 
-                {/* TELEMETRY ROW */}
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>
                     <Text style={styles.statLabel}>HEADCOUNT_SYNC</Text>
@@ -242,7 +240,6 @@ export default function CommandCenterScreen() {
                   </View>
                 </View>
 
-                {/* KILLSWITCH ACTION */}
                 <TouchableOpacity
                   style={[
                     styles.killButton,
@@ -298,7 +295,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 100 },
 
-  // Card Styles
+  
   teamCard: {
     backgroundColor: "rgba(0,0,0,0.4)",
     borderWidth: 1,
@@ -350,7 +347,7 @@ const styles = StyleSheet.create({
   },
   statusText: { fontSize: 9, fontWeight: "900", letterSpacing: 1 },
 
-  // Telemetry Section
+  
   statsRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -403,7 +400,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // Action Buttons
+  
   killButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -425,7 +422,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
 
-  // States
+  
   loaderBox: { padding: 40, alignItems: "center" },
   loaderText: {
     color: COLORS.primary,

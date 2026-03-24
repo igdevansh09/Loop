@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  Platform,
   TouchableOpacity,
   Linking as RNLinking,
   Share,
@@ -28,8 +27,8 @@ interface SwiperCardProps {
     founder_github: string;
     required_college: string;
     founder_college?: string;
-    max_capacity?: number; // 🚀 ADDED CAPACITY
-    required_gender?: string; // 🚀 ADDED GENDER
+    max_capacity?: number; 
+    required_gender?: string; 
     hackathon_url?: string;
   };
 }
@@ -41,7 +40,7 @@ export default function SwiperCard({ card }: SwiperCardProps) {
     ? card.required_skills.split(",").map((s) => s.trim())
     : [];
 
-  // Now mapping to the exact data point Postgres sends us
+  
   const matchPercentage = Math.round(card.match_score * 100);
 
   const openGitHub = () => {
@@ -78,9 +77,9 @@ export default function SwiperCard({ card }: SwiperCardProps) {
         description: card.project_description,
         founder: card.founder_github,
         college: card.required_college,
-        founder_college: card.founder_college, // 🚀 ADDED
-        capacity: card.max_capacity?.toString(), // 🚀 ADDED
-        gender: card.required_gender, // 🚀 ADDED
+        founder_college: card.founder_college, 
+        capacity: card.max_capacity?.toString(), 
+        gender: card.required_gender, 
         hackathon_url: card.hackathon_url,
       },
     });
@@ -275,7 +274,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     marginVertical: 15,
   },
-  // 🚀 NEW: Constraints Row Layout
+  
   constraintsRow: {
     flexDirection: "row",
     flexWrap: "wrap",

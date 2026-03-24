@@ -21,7 +21,7 @@ interface ApplicantModalProps {
     profiles: {
       github_handle: string;
       training_ground: string;
-      ai_assessment: string; // 🚀 Swapped to ai_assessment
+      ai_assessment: string; 
     };
     teams: {
       project_name: string;
@@ -56,15 +56,13 @@ export const ApplicantModal = ({
           style={styles.modalContent}
           onStartShouldSetResponder={() => true}
         >
-          {/* Header */}
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>
-              {applicant.teams?.project_name?.toUpperCase()} //
+              {applicant.teams?.project_name?.toUpperCase()} 
             </Text>
           </View>
 
 
-          {/* GitHub Identity */}
           <View style={styles.infoBlock}>
             <Text style={styles.label}>IDENTITY_SIGNATURE:</Text>
             <TouchableOpacity
@@ -85,7 +83,6 @@ export const ApplicantModal = ({
             </TouchableOpacity>
           </View>
 
-          {/* 🚀 Restored AI Summary Block */}
           <View style={styles.infoBlock}>
             <Text style={styles.label}>AI_DOSSIER_SUMMARY:</Text>
             <View style={styles.summaryBox}>
@@ -95,7 +92,6 @@ export const ApplicantModal = ({
             </View>
           </View>
 
-          {/* Training Ground */}
           <View style={styles.infoBlock}>
             <Text style={styles.label}>TRAINING_GROUND / ORIGIN:</Text>
             <View style={styles.originBox}>
@@ -169,7 +165,7 @@ const styles = StyleSheet.create({
   },
   githubText: { color: COLORS.white, fontSize: 16, fontWeight: "800" },
 
-  // 🚀 New Styles for Summary
+  
   summaryBox: {
     backgroundColor: "rgba(255,255,255,0.03)",
     padding: 12,
@@ -180,7 +176,7 @@ const styles = StyleSheet.create({
   summaryText: {
     color: COLORS.white,
     fontSize: 13,
-    lineHeight: 22, // Better line-height for a paragraph
+    lineHeight: 22, 
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
 

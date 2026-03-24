@@ -1,5 +1,5 @@
 import { Redirect, Tabs } from "expo-router";
-// 🚀 1. Switched from expo-symbols to Ionicons
+
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,7 +7,7 @@ import { COLORS } from "../../constants/theme";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useLedgerStore } from "../../store/useLedgerStore";
 
-// 🚀 2. Simplified the icon wrapper for Ionicons
+
 function TabBarIcon({
   name,
   color,
@@ -42,7 +42,7 @@ export default function TabLayout() {
           paddingBottom: insets.bottom,
           paddingLeft: insets.left,
           paddingRight: insets.right,
-          borderTopColor: "rgba(255,255,255,0.05)", // Tactical separator line
+          borderTopColor: "rgba(255,255,255,0.05)", 
         },
         headerShown: false,
       }}
@@ -51,7 +51,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Arena",
-          // 🚀 3. Replaced Apple specific icons with Universal Ionicons
+          
           tabBarIcon: ({ color }) => <TabBarIcon name="layers" color={color} />,
         }}
       />

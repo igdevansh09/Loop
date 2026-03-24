@@ -36,7 +36,7 @@ export default function ArenaScreen() {
     processSwipe,
   } = useArenaStore();
 
-  // 🚀 NEW: Track when the deck runs out of physical cards
+  
   const [allCardsSwiped, setAllCardsSwiped] = useState(false);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function ArenaScreen() {
         setForging(false);
       } else {
         await fetchMatches(user.id);
-        setAllCardsSwiped(false); // Reset on boot
+        setAllCardsSwiped(false); 
       }
     };
 
@@ -72,14 +72,14 @@ export default function ArenaScreen() {
     processSwipe(user!.id, team.id, direction);
   };
 
-  // 🚀 NEW: The Manual Radar Ping
+  
   const handleRescan = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setAllCardsSwiped(false);
     await fetchMatches(user!.id);
   };
 
-  // --- 1. THE FORGE STATE (Smooth Fade) ---
+  
   if (isForging) {
     return (
       <Animated.View
@@ -102,7 +102,7 @@ export default function ArenaScreen() {
     );
   }
 
-  // --- 2. THE RADAR SCAN STATE (Smooth Fade) ---
+  
   if (isLoading) {
     return (
       <Animated.View
@@ -125,7 +125,7 @@ export default function ArenaScreen() {
     );
   }
 
-  // --- 3. THE ARENA MAIN UI ---
+  
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -144,7 +144,6 @@ export default function ArenaScreen() {
       </Animated.View>
 
       <View style={styles.swiperContainer}>
-        {/* 🚀 FIXED: Now checks if teams exist AND if we haven't swiped them all */}
         {teams.length > 0 && !allCardsSwiped ? (
           <Animated.View
             entering={FadeIn.delay(300).duration(800)}
@@ -155,7 +154,7 @@ export default function ArenaScreen() {
               renderCard={(card) => <SwiperCard card={card} />}
               onSwipedLeft={(index) => handlePhysicalSwipe(index, "left")}
               onSwipedRight={(index) => handlePhysicalSwipe(index, "right")}
-              onSwipedAll={() => setAllCardsSwiped(true)} // 🚀 FIXED: Tells the UI the deck is empty
+              onSwipedAll={() => setAllCardsSwiped(true)} 
               cardIndex={0}
               containerStyle={{ backgroundColor: "transparent", flex: 1 }}
               cardVerticalMargin={0}
@@ -230,7 +229,6 @@ export default function ArenaScreen() {
               No more truth vectors detected in your immediate radius.
             </Text>
 
-            {/* 🚀 NEW: The Rescan Button */}
             <TouchableOpacity
               style={styles.rescanButton}
               onPress={handleRescan}
@@ -309,9 +307,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     maxWidth: "85%",
     lineHeight: 20,
-    marginBottom: 30, // 🚀 Added spacing above the button
+    marginBottom: 30, 
   },
-  // 🚀 NEW: Rescan Button Styles
+  
   rescanButton: {
     backgroundColor: COLORS.primary,
     flexDirection: "row",

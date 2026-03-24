@@ -68,7 +68,6 @@ export const OutboundCard = ({ item, onAction }: OutboundCardProps) => {
       <CornerBrackets />
 
       <View style={styles.cardLayout}>
-        {/* LEFT: Core Intel */}
         <View style={styles.intelBlock}>
           <View style={styles.statusRow}>
             <View
@@ -93,7 +92,6 @@ export const OutboundCard = ({ item, onAction }: OutboundCardProps) => {
           </TouchableOpacity>
         </View>
 
-        {/* RIGHT: Dynamic Action Pill */}
         <View style={styles.actionBlock}>
           {isAccepted ? (
             <TouchableOpacity
@@ -170,7 +168,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // Typography & Identifiers
+  
   statusRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -201,7 +199,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  // Dynamic Action Pills
+  
   actionPill: {
     flexDirection: "row",
     alignItems: "center",

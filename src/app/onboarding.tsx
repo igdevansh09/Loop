@@ -16,7 +16,7 @@ import Animated, {
   withRepeat,
   withSequence,
   interpolateColor,
-  SharedValue, // 🔧 FIXED: Imported SharedValue directly here
+  SharedValue, 
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import {
@@ -32,7 +32,7 @@ const { height, width } = Dimensions.get("window");
 const SWIPE_WIDTH = width * 0.85;
 const PADDING = 30;
 
-// 🔧 FIXED: Using the direct SharedValue type
+
 const DataStreamBackground = ({
   progress,
 }: {
@@ -219,7 +219,6 @@ export default function OnboardingScreen() {
     <GestureHandlerRootView style={styles.container}>
       <DataStreamBackground progress={progress} />
 
-      {/* 🔧 FIXED: Gradient explicitly cuts off at the exact middle (y: 0.5) */}
       <LinearGradient
         colors={[`${COLORS.primary}15`, "transparent"]}
         style={styles.gradient}

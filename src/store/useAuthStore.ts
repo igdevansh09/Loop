@@ -19,7 +19,7 @@ import Constants from 'expo-constants';
 export async function registerForPushNotificationsAsync() {
   let token;
 
-  // 🚀 1. MUST BE DONE FIRST FOR ANDROID: Set up the OS-level channel
+  
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
@@ -46,7 +46,7 @@ export async function registerForPushNotificationsAsync() {
       return undefined;
     }
 
-    // 🚀 2. Grab the token using your EAS Project ID
+    
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
     if (!projectId) {
       console.warn("EAS Project ID is missing from app.json!");
@@ -57,7 +57,7 @@ export async function registerForPushNotificationsAsync() {
       token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
     } catch (e) {
       console.error("Native Token Fetch Failed:", e);
-      throw e; // Let the blast shield in useAuthStore catch this
+      throw e; 
     }
   } else {
     console.log("Must use physical device for Push Notifications");
@@ -67,7 +67,7 @@ export async function registerForPushNotificationsAsync() {
 }
 
 
-// Required to make sure the web browser closes automatically when auth finishes
+
 WebBrowser.maybeCompleteAuthSession();
 
 export interface GithubStats {
@@ -76,19 +76,19 @@ export interface GithubStats {
   topLanguages: { lang: string; percentage: number }[];
 }
 
-// 1. 🛡️ Strict Database Schema Contract (This fixes your error)
+
 export interface UserProfile {
   id: string;
   training_ground: string | null;
   available_hours_per_day: number | null;
   raw_github_data: any | null; 
-  ai_assessment: string | null;     // Moved here
-  ai_primary_stack: string | null;  // Moved here
-  ai_weekend_build: string | null;  // Moved here
-  [key: string]: any; // Catch-all for other Supabase columns
+  ai_assessment: string | null;     
+  ai_primary_stack: string | null;  
+  ai_weekend_build: string | null;  
+  [key: string]: any; 
 }
 
-// 2. 🛡️ Enforce the full shape of the store
+
 interface AuthState {
   session: Session | null;
   user: User | null;
@@ -106,14 +106,14 @@ interface AuthState {
   githubStats: GithubStats | null;
   deleteAccount: () => Promise<boolean>;
   registerDeviceToken: () => Promise<void>;
-  isGeneratingProfile: boolean; // 🚀 ADD THIS
+  isGeneratingProfile: boolean; 
 }
 
-// Global trackers to prevent listener memory leaks during re-renders
+
 let appStateListener: NativeEventSubscription | null = null;
 let authListener: { data: { subscription: { unsubscribe: () => void } } } | null = null;
 
-// 3. 🛡️ Inject 'get' alongside 'set' to access sibling actions safely
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
@@ -121,12 +121,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   hasSeenOnboarding: false,
   isAuthenticating: false,
-  isGeneratingProfile: false, // 🚀 ADD THIS
+  isGeneratingProfile: false, 
   githubStats: null,
 
   initializeAuth: async () => {
     try {
-      // Prevent duplicate event listeners
+      
       if (!appStateListener) {
         appStateListener = AppState.addEventListener(
           "change",
@@ -156,12 +156,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         hasSeenOnboarding,
       });
 
-      // Fetch profile on initial load if user exists
+      
       if (session?.user) {
         await get().fetchProfile(session.user.id);
       }
 
-      // Prevent duplicate auth listeners
+      
       if (!authListener) {
         authListener = supabase.auth.onAuthStateChange((event, newSession) => {
           if (
@@ -191,7 +191,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loginWithGithub: async () => {
     set({ isAuthenticating: true });
-    let isSuccess = false; // 🚀 1. Track success to prevent UI glitch
+    let isSuccess = false; 
 
     try {
       const redirectUrl = Linking.createURL("");
@@ -214,7 +214,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       );
 
       if (result.type === "success" && result.url) {
-        // ... (Your existing URL parsing logic) ...
+        
         const hashIndex = result.url.indexOf("#");
         const queryIndex = result.url.indexOf("?");
 
@@ -248,7 +248,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           });
           if (sessionError) throw sessionError;
 
-          isSuccess = true; // 🚀 2. Mark as true so we don't kill the loading spinner early
+          isSuccess = true; 
         } else {
           throw new Error("Tokens missing from URL payload.");
         }
@@ -257,7 +257,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const error = err as Error;
       Alert.alert("Authentication Failed", error.message);
     } finally {
-      // 🚀 3. Only turn off the spinner if it FAILED. If successful, keep it spinning while the router jumps screens!
+      
       if (!isSuccess) {
         set({ isAuthenticating: false });
       }
@@ -266,14 +266,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     try {
-      // 1. Get the current user before we destroy the session
+      
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (user) {
         try {
-          // 🚀 ISOLATED BLOCK: Attempt to grab the device token and remove it from Supabase
+          
           const token = await registerForPushNotificationsAsync();
 
           if (token) {
@@ -289,7 +289,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             console.log("UPLINK SEVERED: Push Token Removed from array.");
           }
         } catch (pushError) {
-          // 🚀 BLAST SHIELD: If Firebase crashes here, swallow the error so logout continues
+          
           console.warn(
             "UPLINK BYPASSED ON LOGOUT: Could not remove token. Native Firebase may not be initialized.",
             pushError,
@@ -297,7 +297,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
 
-      // 2. Terminate the session (Executes even if the token removal fails)
+      
       await supabase.auth.signOut();
       set({ user: null, profile: null, session: null });
       console.log("SESSION TERMINATED.");
@@ -306,7 +306,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  // 🚀 Call this function right after a successful login or app boot
+  
   registerDeviceToken: async () => {
     try {
       const {
@@ -318,19 +318,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       let token;
       try {
-        // 🚀 We isolate the exact point of failure in its own try/catch block
+        
         token = await registerForPushNotificationsAsync();
       } catch (firebaseError) {
-        // 🚀 We silently trap the Firebase crash here so it doesn't break the app
+        
         console.warn(
           "UPLINK BYPASSED: Native Firebase is not initialized. Notifications are disabled for this session.",
           firebaseError,
         );
-        return; // Abort the token registration, but keep the app running perfectly
+        return; 
       }
 
       if (token) {
-        // Send to database
+        
         const { error: rpcError } = await supabase.rpc("add_push_token", {
           p_user_id: user.id,
           p_token: token,
@@ -386,7 +386,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     if (!data) {
-      // 🚀 THE CAP: Abort if we've retried 3 times (6 seconds)
+      
       if (retryCount >= 3) {
         console.error(
           "CRITICAL: Database row not found after 3 retries. Trigger failure or RLS block.",
@@ -401,7 +401,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    // 🚀 THE ANTI-DOWNGRADE SHIELD
+    
     const currentState = get().profile;
     if (currentState?.ai_assessment && !data.ai_assessment) {
       console.log("Stale DB read detected. Preserving local AI state...");
@@ -452,7 +452,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         githubStats: { repoCount, totalStars, topLanguages },
       });
 
-      // Only trigger the AI if it's completely empty AND not already generating
+      
       if (!data.ai_assessment && !get().isGeneratingProfile) {
         console.log("No AI Assessment found. Igniting Forge...");
         get().generateAiProfile();
@@ -486,7 +486,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (error) throw error;
 
-      // Optimistically update the UI instantly
+      
       if (data?.profile) {
         set((state) => ({
           profile: state.profile
@@ -500,9 +500,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }));
       }
 
-      // 🚀 THE DELAY TACTIC
-      // We wait 3 seconds before fetching the profile again to ensure Postgres has
-      // fully committed the new AI data and GitHub raw stats to the database replicas.
+      
+      
+      
       setTimeout(() => {
         get().fetchProfile(user.id);
       }, 3000);
@@ -519,11 +519,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   deleteAccount: async () => {
     set({ isAuthenticating: true });
     try {
-      // 1. Trigger the database self-destruct
+      
       const { error } = await supabase.rpc("delete_user");
       if (error) throw error;
 
-      // 2. Clear the local cache and sign out
+      
       await supabase.auth.signOut();
       set({ session: null, user: null, profile: null, githubStats: null });
 
