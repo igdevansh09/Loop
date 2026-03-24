@@ -32,8 +32,8 @@ This is not just a UI project — it demonstrates **scalable architecture, real-
 
 ## 🚀 Demo
 
-- 📱 APK: https://example.com/dummy-apk-link  
-- 🎥 Demo Video: https://example.com/dummy-video-link  
+- 📱 APK: https://github.com/igdevansh09/Loop/releases/download/apps/Loop.apk  
+- 🎥 Demo Video: https://youtube.com/shorts/17AIQpRHrjc?si=t6pLO01wU0ib4SO1  
 
 ---
 
