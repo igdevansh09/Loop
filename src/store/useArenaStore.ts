@@ -5,11 +5,17 @@ interface ArenaState {
   teams: any[];
   isLoading: boolean;
   isForging: boolean;
-  
-  
+
   setForging: (status: boolean) => void;
   fetchMatches: (userId: string) => Promise<void>;
-  processSwipe: (userId: string, teamId: string, direction: "left" | "right") => Promise<void>;
+  processSwipe: (
+    userId: string,
+    teamId: string,
+    direction: "left" | "right",
+  ) => Promise<void>;
+
+  // 🚀 NEW: Added a way to manually pop a card from the deck (used by the Dossier screen)
+  removeTeamFromDeck: (teamId: string) => void;
 }
 
 export const useArenaStore = create<ArenaState>((set) => ({
@@ -18,6 +24,12 @@ export const useArenaStore = create<ArenaState>((set) => ({
   isForging: false,
 
   setForging: (status) => set({ isForging: status }),
+
+  // 🚀 NEW: Instantly removes the card from the UI
+  removeTeamFromDeck: (teamId) =>
+    set((state) => ({
+      teams: state.teams.filter((t) => t.id !== teamId),
+    })),
 
   fetchMatches: async (userId: string) => {
     set({ isLoading: true });
@@ -36,9 +48,11 @@ export const useArenaStore = create<ArenaState>((set) => ({
     }
   },
 
-  processSwipe: async (userId: string, teamId: string, direction: "left" | "right") => {
-    
-    
+  processSwipe: async (
+    userId: string,
+    teamId: string,
+    direction: "left" | "right",
+  ) => {
     try {
       const { error } = await supabase.from("swipes").insert({
         swiper_id: userId,

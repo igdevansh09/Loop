@@ -12,12 +12,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  FadeInDown,
-  FadeIn,
-  Layout,
-  SlideInDown,
-} from "react-native-reanimated";
+import Animated, { FadeInDown, Layout } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
@@ -25,7 +20,6 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { useLaunchStore } from "../../store/useLaunchStore";
 
 const springConfig = { damping: 15, stiffness: 100 };
-
 
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -35,7 +29,6 @@ const CornerBrackets = ({ color = COLORS.primary }) => (
     <View style={[styles.corner, styles.bottomRight, { borderColor: color }]} />
   </View>
 );
-
 
 const TerminalInput = ({
   label,
@@ -67,7 +60,6 @@ const TerminalInput = ({
     </View>
   );
 };
-
 
 const TerminalSelect = ({ label, value, options, onSelect }: any) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -122,7 +114,6 @@ const TerminalSelect = ({ label, value, options, onSelect }: any) => {
   );
 };
 
-
 const TerminalSkillInput = () => {
   const {
     requiredSkills,
@@ -135,7 +126,6 @@ const TerminalSkillInput = () => {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
-  
   useEffect(() => {
     const timeoutId = setTimeout(() => fetchSkillSuggestions(query), 500);
     return () => clearTimeout(timeoutId);
@@ -227,7 +217,6 @@ export default function CreateTeamScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
 
-  
   const {
     projectName,
     hackathonUrl,
@@ -238,45 +227,31 @@ export default function CreateTeamScreen() {
     communityUrl,
     description,
     setField,
-    analyzeSignal,
     launchTeam,
-    isAnalyzing,
     isSubmitting,
-    signalScore,
-    aiFeedback,
-    vectorData,
-    resetState,
   } = useLaunchStore();
 
-  const handleAnalyze = async () => {
+  const handleLaunch = async () => {
+    // 1. Check for missing fields
+    if (
+      !projectName ||
+      !hackathonUrl ||
+      !communityUrl ||
+      !description ||
+      requiredSkills.length === 0
+    ) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert("MISSING DATA", "Fill out all required fields.");
+      return;
+    }
+
+    // 2. Enforce minimum description length directly on launch
     if (description.length < 50) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
         "SIGNAL REJECTED",
         "Description too short. Explain the architecture.",
       );
-      return;
-    }
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const passed = await analyzeSignal(description);
-    Haptics.notificationAsync(
-      passed
-        ? Haptics.NotificationFeedbackType.Success
-        : Haptics.NotificationFeedbackType.Warning,
-    );
-  };
-
-  const handleLaunch = async () => {
-    if (
-      !projectName ||
-      !hackathonUrl ||
-      !communityUrl ||
-      requiredSkills.length === 0 ||
-      !vectorData
-    ) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("MISSING DATA", "Fill out all fields and pass Calibrator.");
       return;
     }
 
@@ -314,7 +289,6 @@ export default function CreateTeamScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {}
         <Animated.View
           entering={FadeInDown.delay(200)
             .springify()
@@ -332,13 +306,13 @@ export default function CreateTeamScreen() {
             value={projectName}
             onChangeText={(val: string) => setField("projectName", val)}
           />
-          <TerminalSkillInput />
           <TerminalInput
             placeholder="Hackathon URL (e.g., Devfolio link)"
             value={hackathonUrl}
             onChangeText={(val: string) => setField("hackathonUrl", val)}
             autoCapitalize="none"
           />
+          <TerminalSkillInput />
         </Animated.View>
 
         <Animated.View
@@ -436,7 +410,10 @@ export default function CreateTeamScreen() {
           entering={FadeInDown.delay(600)
             .springify()
             .damping(springConfig.damping)}
-          style={[styles.hudBox, { padding: 0, overflow: "hidden" }]}
+          style={[
+            styles.hudBox,
+            { padding: 0, overflow: "hidden", marginTop: 10 },
+          ]}
         >
           <CornerBrackets />
           <LinearGradient
@@ -445,110 +422,21 @@ export default function CreateTeamScreen() {
           />
 
           <View style={{ padding: 25 }}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionIndex}>05</Text>
-              <Text style={styles.sectionLabel}>CALIBRATOR</Text>
-            </View>
-
-            {signalScore === null ? (
-              <TouchableOpacity
-                style={[
-                  styles.analyzeButton,
-                  isAnalyzing && styles.analyzeButtonActive,
-                ]}
-                onPress={handleAnalyze}
-                disabled={isAnalyzing}
-                activeOpacity={0.8}
-              >
-                {isAnalyzing ? (
-                  <View style={styles.loadingRow}>
-                    <ActivityIndicator color={COLORS.background} />
-                    <Text style={styles.analyzeButtonText}>
-                      COMPUTING TRUTH HASH...
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={styles.loadingRow}>
-                    <Ionicons
-                      name="finger-print"
-                      size={20}
-                      color={COLORS.background}
-                    />
-                    <Text style={styles.analyzeButtonText}>ANALYZE SIGNAL</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ) : (
-              <Animated.View
-                entering={FadeIn.duration(400)}
-                style={styles.feedbackContainer}
-              >
-                <LinearGradient
-                  colors={
-                    signalScore > 85
-                      ? [`${COLORS.primary}33`, "rgba(0,0,0,0.8)"]
-                      : ["rgba(239, 68, 68, 0.2)", "rgba(0,0,0,0.8)"]
-                  }
-                  style={[
-                    styles.scoreBadge,
-                    {
-                      borderColor:
-                        signalScore > 85 ? COLORS.primary : "#ef4444",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.scoreText,
-                      { color: signalScore > 85 ? COLORS.primary : "#ef4444" },
-                    ]}
-                  >
-                    {signalScore}%
-                  </Text>
-                  <Text style={styles.scoreLabel}>SIGNAL TRUTH</Text>
-                </LinearGradient>
-
-                <Text style={styles.feedbackText}>{aiFeedback}</Text>
-
-                {signalScore > 85 ? (
-                  <Animated.View
-                    entering={SlideInDown.springify()}
-                    style={{ width: "100%" }}
-                  >
-                    <TouchableOpacity
-                      style={styles.launchButton}
-                      onPress={handleLaunch}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <ActivityIndicator color={COLORS.background} />
-                      ) : (
-                        <View style={styles.loadingRow}>
-                          <Ionicons
-                            name="rocket"
-                            size={20}
-                            color={COLORS.background}
-                          />
-                          <Text style={styles.launchButtonText}>
-                            DEPLOY TO ARENA
-                          </Text>
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  </Animated.View>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.retryButton}
-                    onPress={resetState}
-                  >
-                    <Ionicons name="refresh" size={16} color="#ef4444" />
-                    <Text style={styles.retryButtonText}>
-                      REWRITE ARCHITECTURE
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </Animated.View>
-            )}
+            <TouchableOpacity
+              style={styles.launchButton}
+              onPress={handleLaunch}
+              disabled={isSubmitting}
+              activeOpacity={0.8}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color={COLORS.background} />
+              ) : (
+                <View style={styles.loadingRow}>
+                  <Ionicons name="rocket" size={20} color={COLORS.background} />
+                  <Text style={styles.launchButtonText}>DEPLOY TO ARENA</Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
         </Animated.View>
       </ScrollView>
@@ -556,14 +444,11 @@ export default function CreateTeamScreen() {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-
-  
   headerContainer: {
     paddingTop: 60,
     paddingHorizontal: 16,
@@ -578,26 +463,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   headerTitle: {
-    fontSize: 36, 
+    fontSize: 36,
     fontWeight: "900",
     color: COLORS.white,
     letterSpacing: -1,
     textTransform: "uppercase",
   },
-
-  
   content: {
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 120,
   },
-
-  
   hudBox: {
     backgroundColor: "rgba(0,0,0,0.4)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
-    padding: 16, 
+    padding: 16,
     marginBottom: 20,
     position: "relative",
   },
@@ -621,7 +502,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderRightWidth: 2,
   },
-
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -654,8 +534,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "500",
   },
-
-  
   inputWrapper: { marginBottom: 15 },
   inputLabel: {
     color: COLORS.grey,
@@ -680,7 +558,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     backgroundColor: "rgba(234, 179, 8, 0.05)",
   },
-
   row: { flexDirection: "row", justifyContent: "space-between" },
   rowCentered: {
     flexDirection: "row",
@@ -688,8 +565,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   textArea: { minHeight: 120 },
-
-  
   dropdownMenu: {
     position: "absolute",
     top: "100%",
@@ -707,8 +582,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255,255,255,0.05)",
   },
   inputLoader: { position: "absolute", right: 16, top: 16 },
-
-  
   chipContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -730,47 +603,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-
-  
-  analyzeButton: {
-    backgroundColor: COLORS.white,
-    padding: 18,
-    alignItems: "center",
-  },
-  analyzeButtonActive: { backgroundColor: COLORS.grey },
   loadingRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  analyzeButtonText: {
-    color: COLORS.background,
-    fontSize: 14,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 2,
-  },
-  feedbackContainer: { alignItems: "center", marginTop: 10 },
-  scoreBadge: {
-    borderWidth: 2,
-    paddingHorizontal: 30,
-    paddingVertical: 20,
-    marginBottom: 20,
-    alignItems: "center",
-  },
-  scoreText: { fontSize: 56, fontWeight: "900", letterSpacing: -2 },
-  scoreLabel: {
-    color: COLORS.white,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 3,
-    marginTop: 5,
-  },
-  feedbackText: {
-    color: COLORS.white,
-    fontSize: 13,
-    textAlign: "center",
-    marginBottom: 30,
-    lineHeight: 22,
-    fontWeight: "500",
-    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-  },
   launchButton: {
     backgroundColor: COLORS.primary,
     padding: 18,
@@ -780,24 +613,6 @@ const styles = StyleSheet.create({
   launchButtonText: {
     color: COLORS.background,
     fontSize: 14,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 2,
-  },
-  retryButton: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "rgba(239, 68, 68, 0.5)",
-    padding: 16,
-    alignItems: "center",
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  retryButtonText: {
-    color: "#ef4444",
-    fontSize: 12,
     fontWeight: "900",
     textTransform: "uppercase",
     letterSpacing: 2,

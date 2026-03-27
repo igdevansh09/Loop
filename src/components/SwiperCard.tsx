@@ -53,9 +53,11 @@ export default function SwiperCard({ card }: SwiperCardProps) {
   const handleShare = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     try {
-      const shareUrl = Linking.createURL("/dossier", {
-        queryParams: { id: card.id },
-      });
+      // 🚀 THE FIX: We forcefully construct an HTTPS link.
+      // Note: Replace 'loop.app' with your actual website domain once you buy one.
+      // When a user clicks this on their phone, your website should automatically
+      // redirect them back into the native app using the raw deep link.
+      const shareUrl = `https://loop.app/dossier?id=${card.id}`;
 
       await Share.share({
         message: `[ENCRYPTED INTEL] I found a high-value project in the Arena: ${card.project_name}.\n\nDecrypt the dossier here: ${shareUrl}`,

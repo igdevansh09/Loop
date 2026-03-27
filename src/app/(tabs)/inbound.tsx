@@ -28,7 +28,6 @@ interface IntelPayload {
   };
 }
 
-
 export default function InboundScreen() {
   const { user } = useAuthStore();
   const [selectedIntel, setSelectedIntel] = useState<IntelPayload | null>(null);
@@ -42,6 +41,12 @@ export default function InboundScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (user) fetchLedger(user.id);
   };
+
+  // 🚀 THE BLAST SHIELD: Pre-filter the array to purge any malformed or ghost data
+  // This guarantees the app will NEVER crash trying to read missing properties.
+  const validInbound = inbound.filter(
+    (item) => item && item.profiles && item.teams,
+  );
 
   return (
     <View style={styles.container}>
@@ -70,8 +75,8 @@ export default function InboundScreen() {
           />
         }
       >
-        {inbound.length > 0 ? (
-          inbound.map((item, index) => (
+        {validInbound.length > 0 ? (
+          validInbound.map((item, index) => (
             <Animated.View
               key={item.id}
               entering={FadeInDown.delay(index * 100)}
@@ -79,7 +84,6 @@ export default function InboundScreen() {
               <InboundCard
                 item={item}
                 onAction={updateRequest}
-                
                 onOpenModal={() => setSelectedIntel(item)}
               />
             </Animated.View>
@@ -93,10 +97,11 @@ export default function InboundScreen() {
           </Animated.View>
         )}
       </ScrollView>
+
       <ApplicantModal
-        visible={!!selectedIntel} 
+        visible={!!selectedIntel}
         applicant={selectedIntel}
-        onClose={() => setSelectedIntel(null)} 
+        onClose={() => setSelectedIntel(null)}
       />
     </View>
   );
@@ -104,8 +109,6 @@ export default function InboundScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-
-  
   headerContainer: {
     paddingTop: 60,
     paddingHorizontal: 16,
@@ -126,10 +129,7 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     textTransform: "uppercase",
   },
-
   content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 100 },
-
-  
   emptyState: { marginTop: 60, alignItems: "center", justifyContent: "center" },
   emptyText: {
     color: "rgba(255, 255, 255, 0.2)",

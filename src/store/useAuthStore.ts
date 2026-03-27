@@ -299,7 +299,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       
       await supabase.auth.signOut();
-      set({ user: null, profile: null, session: null });
+      set({
+        user: null,
+        profile: null,
+        session: null,
+        isAuthenticating: false,
+      });
       console.log("SESSION TERMINATED.");
     } catch (error) {
       console.error("Logout Fatal Error:", error);

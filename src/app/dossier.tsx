@@ -17,6 +17,10 @@ import { COLORS } from "../constants/theme";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { supabase } from "../lib/supabase";
 
+// 🚀 IMPORT THE STORES
+import { useAuthStore } from "../store/useAuthStore";
+import { useArenaStore } from "../store/useArenaStore";
+
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
     <View style={[styles.corner, styles.topLeft, { borderColor: color }]} />
@@ -29,14 +33,15 @@ const CornerBrackets = ({ color = COLORS.primary }) => (
 export default function DossierScreen() {
   const router = useRouter();
 
+  // 🚀 HOOK INTO GLOBAL STATE
+  const { user } = useAuthStore();
+  const { processSwipe, removeTeamFromDeck } = useArenaStore();
+
   const [isTransmitting, setIsTransmitting] = useState(false);
   const [isDecrypting, setIsDecrypting] = useState(true);
   const [isExpunged, setIsExpunged] = useState(false);
-
-  
   const [isUnauthenticated, setIsUnauthenticated] = useState(false);
   const [isFounder, setIsFounder] = useState(false);
-
   const [dossier, setDossier] = useState<any>(null);
 
   const params = useLocalSearchParams<{
@@ -62,7 +67,6 @@ export default function DossierScreen() {
           data: { user },
         } = await supabase.auth.getUser();
 
-        
         if (!user) {
           setIsUnauthenticated(true);
           setIsDecrypting(false);
@@ -77,7 +81,6 @@ export default function DossierScreen() {
         if (!error && data && data.length > 0) {
           const team = data[0];
 
-          
           if (team.founder_id === user.id) {
             setIsFounder(true);
           }
@@ -91,7 +94,12 @@ export default function DossierScreen() {
             hackathon_url: team.hackathon_url,
             capacity: team.max_capacity?.toString() || "ANY",
             gender: team.required_gender || "ANY",
-            founder_college: params.founder_college || "UNKNOWN",
+            // 🚀 FIXED: Safely pull the founder's college from the team database object first
+            founder_college:
+              team.founder_college ||
+              team.training_ground ||
+              params.founder_college ||
+              "UNKNOWN",
             match: Math.round(team.match_score * 100).toString(),
           });
           setIsDecrypting(false);
@@ -119,8 +127,6 @@ export default function DossierScreen() {
         gender: params.gender || "ANY",
       });
       setIsDecrypting(false);
-
-      
       fetchIntel();
     } else {
       fetchIntel();
@@ -137,10 +143,18 @@ export default function DossierScreen() {
   };
 
   const handleApply = async () => {
+    if (!user || !params.id) return;
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setIsTransmitting(true);
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // 🚀 FIXED 1: Actually submit the application to the Swipes database
+      await processSwipe(user.id, params.id, "right");
+
+      // 🚀 FIXED 2: Remove the card from the background UI deck instantly
+      removeTeamFromDeck(params.id);
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       handleClose();
     } catch (error) {
@@ -149,9 +163,6 @@ export default function DossierScreen() {
     }
   };
 
-  
-  
-  
   if (isUnauthenticated) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -162,7 +173,7 @@ export default function DossierScreen() {
         </Text>
         <TouchableOpacity
           style={styles.returnButton}
-          onPress={() => router.replace("/login")} 
+          onPress={() => router.replace("/login")}
         >
           <Text style={styles.returnText}>AUTHENTICATE NOW</Text>
         </TouchableOpacity>
@@ -200,9 +211,6 @@ export default function DossierScreen() {
   const safeMatch =
     isNaN(Number(dossier.match)) && dossier.match !== "?" ? "0" : dossier.match;
 
-  
-  
-  
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -264,7 +272,7 @@ export default function DossierScreen() {
             </View>
           </TouchableOpacity>
 
-          {dossier.founder_college && (
+          {dossier.founder_college && dossier.founder_college !== "UNKNOWN" && (
             <>
               <View style={styles.dividerSmall} />
               <Text style={styles.kicker}>FOUNDER_COLLEGE //</Text>
@@ -354,7 +362,6 @@ export default function DossierScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {}
         <Animated.View entering={FadeInDown.delay(600).springify()}>
           {isFounder ? (
             <View style={styles.founderBadge}>
@@ -436,7 +443,6 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   scrollContent: { paddingHorizontal: 16, paddingTop: 30, paddingBottom: 100 },
-
   hudBox: {
     backgroundColor: "rgba(0,0,0,0.4)",
     borderWidth: 1,
@@ -465,7 +471,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderRightWidth: 2,
   },
-
   matchBadge: {
     backgroundColor: COLORS.primary,
     flexDirection: "row",
@@ -498,7 +503,6 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 12,
   },
-
   githubButton: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -516,13 +520,11 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   badgeText: { color: COLORS.primary, fontSize: 8, fontWeight: "900" },
-
   dividerSmall: {
     height: 1,
     backgroundColor: "rgba(255, 255, 255, 0.05)",
     marginVertical: 15,
   },
-
   originBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -539,7 +541,6 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     letterSpacing: 0.5,
   },
-
   skillsContainer: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   skillTag: {
     backgroundColor: "rgba(255, 255, 255, 0.05)",
@@ -562,7 +563,6 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: "500",
   },
-
   hackathonButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -581,7 +581,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1,
   },
-
   applyButton: {
     backgroundColor: COLORS.primary,
     flexDirection: "row",
@@ -599,8 +598,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 1.5,
   },
-
-  
   founderBadge: {
     flexDirection: "row",
     justifyContent: "center",
@@ -619,7 +616,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 1.5,
   },
-
   loadingText: {
     color: COLORS.primary,
     marginTop: 20,
@@ -648,7 +644,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
   returnText: { color: COLORS.primary, fontWeight: "900", letterSpacing: 1 },
-
   eofContainer: { marginTop: 40, alignItems: "center" },
   eofText: {
     color: "rgba(255, 255, 255, 0.2)",
