@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -18,6 +17,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useLaunchStore } from "../../store/useLaunchStore";
+
+// 🚀 IMPORT THE GLOBAL ALERT STORE
+import { useAlertStore } from "../../store/useAlertStore";
 
 const springConfig = { damping: 15, stiffness: 100 };
 
@@ -217,6 +219,9 @@ export default function CreateTeamScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
 
+  // 🚀 HOOK INTO THE GLOBAL ALERT STORE
+  const showAlert = useAlertStore((state) => state.showAlert);
+
   const {
     projectName,
     hackathonUrl,
@@ -241,16 +246,19 @@ export default function CreateTeamScreen() {
       requiredSkills.length === 0
     ) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("MISSING DATA", "Fill out all required fields.");
+      // 🚀 FIXED: Replaced native Alert
+      showAlert("MISSING DATA", "Fill out all required fields.", "error");
       return;
     }
 
     // 2. Enforce minimum description length directly on launch
     if (description.length < 50) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert(
+      // 🚀 FIXED: Replaced native Alert
+      showAlert(
         "SIGNAL REJECTED",
         "Description too short. Explain the architecture.",
+        "error",
       );
       return;
     }
@@ -263,7 +271,8 @@ export default function CreateTeamScreen() {
       router.push("/(tabs)");
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("DATABASE ERROR", err.message);
+      // 🚀 FIXED: Replaced native Alert
+      showAlert("DATABASE ERROR", err.message, "error");
     }
   };
 

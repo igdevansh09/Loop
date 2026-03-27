@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Platform,
 } from "react-native";
@@ -18,7 +17,7 @@ import { useRouter } from "expo-router";
 import { COLORS } from "../constants/theme";
 import { useAuthStore } from "../store/useAuthStore";
 import { useLedgerStore } from "../store/useLedgerStore";
-
+import { useAlertStore } from "../store/useAlertStore"; // 🚀 IMPORTED GLOBAL ALERT STORE
 
 interface MissionTeam {
   id: string;
@@ -31,7 +30,6 @@ interface MissionTeam {
 interface LocalCapacities {
   [key: string]: string;
 }
-
 
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -53,16 +51,16 @@ export default function CommandCenterScreen() {
     isLoading,
   } = useLedgerStore();
 
+  // 🚀 EXTRACT ALERT METHODS FROM GLOBAL STORE
+  const { showAlert, showConfirm } = useAlertStore();
+
   const [localCapacities, setLocalCapacities] = useState<LocalCapacities>({});
 
-  
   useEffect(() => {
     if (user?.id) {
       fetchMyTeams(user.id);
     }
   }, [user?.id]);
-
-  
 
   const handleUpdateCap = (teamId: string, currentName: string) => {
     const rawVal = localCapacities[teamId];
@@ -70,43 +68,42 @@ export default function CommandCenterScreen() {
 
     if (isNaN(newCap) || newCap < 1) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("DATA_ERROR", "Target capacity must be a positive integer.");
+      // 🚀 REPLACED NATIVE ALERT WITH CUSTOM ERROR
+      showAlert(
+        "DATA_ERROR",
+        "Target capacity must be a positive integer.",
+        "error",
+      );
       return;
     }
 
-    Alert.alert(
+    // 🚀 REPLACED NATIVE ALERT WITH CUSTOM CONFIRMATION
+    showConfirm(
       "CONFIRM_CAPACITY_SHIFT",
       `Adjust ${currentName.toUpperCase()} capacity to ${newCap} units?`,
-      [
-        { text: "ABORT", style: "cancel" },
-        {
-          text: "EXECUTE",
-          onPress: async () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            await updateCapacity(teamId, newCap);
-            setLocalCapacities({ ...localCapacities, [teamId]: "" }); 
-          },
-        },
-      ],
+      "EXECUTE",
+      async () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        await updateCapacity(teamId, newCap);
+        setLocalCapacities({ ...localCapacities, [teamId]: "" });
+      },
+      "warning",
     );
   };
 
   const handleKill = (teamId: string, name: string) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    Alert.alert(
+
+    // 🚀 REPLACED NATIVE DESTRUCTIVE ALERT WITH CUSTOM CONFIRMATION
+    showConfirm(
       "TERMINATE MISSION",
       `CRITICAL: Terminating ${name.toUpperCase()} will reject all pending applicants and remove the signal from the Arena permanently.`,
-      [
-        { text: "ABORT", style: "cancel" },
-        {
-          text: "CONFIRM_KILL",
-          style: "destructive",
-          onPress: () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            triggerKillswitch(teamId);
-          },
-        },
-      ],
+      "CONFIRM_KILL",
+      () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        triggerKillswitch(teamId);
+      },
+      "error",
     );
   };
 
@@ -117,7 +114,6 @@ export default function CommandCenterScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      {}
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={18} color={COLORS.primary} />
@@ -151,7 +147,6 @@ export default function CommandCenterScreen() {
             const acceptedCount = team.accepted_count?.[0]?.count || 0;
             const isActive = team.is_active;
 
-            
             const isOverCapacity = acceptedCount > team.max_capacity;
             const statusColor = isActive ? COLORS.primary : "#ef4444";
 
@@ -295,7 +290,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 100 },
 
-  
   teamCard: {
     backgroundColor: "rgba(0,0,0,0.4)",
     borderWidth: 1,
@@ -347,7 +341,6 @@ const styles = StyleSheet.create({
   },
   statusText: { fontSize: 9, fontWeight: "900", letterSpacing: 1 },
 
-  
   statsRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -400,7 +393,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  
   killButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -422,7 +414,6 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
 
-  
   loaderBox: { padding: 40, alignItems: "center" },
   loaderText: {
     color: COLORS.primary,

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Alert,
   ActivityIndicator,
   Platform,
   RefreshControl,
@@ -26,6 +25,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
 import { useAuthStore, UserProfile } from "../../store/useAuthStore";
 import { useRouter } from "expo-router";
+import { useAlertStore } from "../../store/useAlertStore"; // Fixed path just in case
 
 interface ExtendedProfile extends UserProfile {
   training_ground: string | null;
@@ -35,7 +35,6 @@ interface ExtendedProfile extends UserProfile {
   ai_weekend_build: string | null;
 }
 
-
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
     <View style={[styles.corner, styles.topLeft, { borderColor: color }]} />
@@ -44,7 +43,6 @@ const CornerBrackets = ({ color = COLORS.primary }) => (
     <View style={[styles.corner, styles.bottomRight, { borderColor: color }]} />
   </View>
 );
-
 
 const TypewriterText = ({ text, delay = 0, style, ...props }: any) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -77,7 +75,6 @@ const TypewriterText = ({ text, delay = 0, style, ...props }: any) => {
     </Text>
   );
 };
-
 
 const TelemetryBar = ({ label, percentage, color, delay }: any) => {
   const barWidth = useSharedValue(0);
@@ -117,10 +114,13 @@ export default function ProfileScreen() {
     generateAiProfile,
     signOut,
     deleteAccount,
-    isGeneratingProfile, 
+    isGeneratingProfile,
   } = useAuthStore();
 
   const router = useRouter();
+
+  // 🚀 PROPERLY HOOKING INTO THE ALERT STORE
+  const { showAlert, showConfirm } = useAlertStore();
 
   const [collegeInput, setCollegeInput] = useState("");
   const [isBurning, setIsBurning] = useState(false);
@@ -138,13 +138,14 @@ export default function ProfileScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsSyncing(true);
     const success = await generateAiProfile();
-    if (success)
+    if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    else {
+    } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert(
-        "Uplink Failed",
+      showAlert(
+        "UPLINK FAILED",
         "Could not sync with GitHub. Try again later.",
+        "error",
       );
     }
     setIsSyncing(false);
@@ -160,43 +161,47 @@ export default function ProfileScreen() {
     const success = await burnTrainingGround(collegeInput.trim());
     setIsBurning(false);
 
-    if (success)
+    if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    else {
+    } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("System Failure", "Failed to write to database.");
+      showAlert("SYSTEM FAILURE", "Failed to write to database.", "error");
     }
   };
 
   const handleLogout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
-    Alert.alert("Disconnect", "Terminate current session?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Logout", style: "destructive", onPress: signOut },
-    ]);
+    // 🚀 FIXED: Using the custom global confirmation alert
+    showConfirm(
+      "DISCONNECT",
+      "Terminate current session?",
+      "LOGOUT",
+      () => {
+        signOut();
+      },
+      "warning",
+    );
   };
 
   const handleDeleteAccount = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    Alert.alert(
+    // 🚀 FIXED: Using the custom global confirmation alert
+    showConfirm(
       "BURN IDENTITY",
       "This action is IRREVERSIBLE. Your vector signature, telemetry, and arena history will be permanently eradicated.",
-      [
-        { text: "ABORT", style: "cancel" },
-        {
-          text: "OBLITERATE",
-          style: "destructive",
-          onPress: async () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            const success = await deleteAccount();
-            if (!success)
-              Alert.alert(
-                "System Failure",
-                "Could not eradicate identity. Contact command.",
-              );
-          },
-        },
-      ],
+      "OBLITERATE",
+      async () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        const success = await deleteAccount();
+        if (!success) {
+          showAlert(
+            "SYSTEM FAILURE",
+            "Could not eradicate identity. Contact command.",
+            "error",
+          );
+        }
+      },
+      "error",
     );
   };
 
@@ -304,7 +309,6 @@ export default function ProfileScreen() {
         </Animated.View>
 
         {isGeneratingProfile ? (
-          
           <Animated.View
             entering={FadeInDown.springify()}
             style={styles.processingBox}
@@ -323,7 +327,6 @@ export default function ProfileScreen() {
             />
           </Animated.View>
         ) : isVerified ? (
-          
           <View style={styles.shardContainer}>
             <Animated.View
               entering={FadeInDown.delay(300).springify()}
@@ -447,7 +450,9 @@ export default function ProfileScreen() {
             <View style={styles.warningBox}>
               <Text style={styles.warningKicker}>[ IMMUTABLE ACTION ]</Text>
               <Text style={styles.warningText}>
-                Put college name to LOCK ORIGIN. This will help the system tailor missions to your background, but CANNOT BE CHANGED LATER. Choose wisely.
+                Put college name to LOCK ORIGIN. This will help the system
+                tailor missions to your background, but CANNOT BE CHANGED LATER.
+                Choose wisely.
               </Text>
 
               <View style={styles.burnRow}>
@@ -843,7 +848,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  
   processingBox: {
     backgroundColor: "rgba(0,0,0,0.6)",
     borderWidth: 1,

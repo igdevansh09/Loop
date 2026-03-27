@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
 import { Alert } from "react-native";
+import { useAlertStore } from "./useAlertStore";
 
 interface LedgerState {
   inbound: any[];
@@ -107,10 +108,13 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
       // ROLLBACK: If database failed (e.g., RLS blocked it), put the cards back on screen
       set({ outbound: prevOutbound, inbound: prevInbound });
 
-      Alert.alert(
-        "TRANSMISSION FAILED",
-        "Database rejected the request. Check your Supabase RLS policies for the 'swipes' table.",
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "TRANSMISSION FAILED",
+          "Database rejected the request. Check your Supabase RLS policies for the 'swipes' table.",
+          "error"
+        );
     }
   },
 
@@ -137,10 +141,13 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
     } catch (err) {
       console.error("Killswitch Failed:", err);
       set({ myTeams: previousTeams });
-      Alert.alert(
-        "SYSTEM_ERROR",
-        "Failed to terminate link. Connection unstable.",
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "SYSTEM_ERROR",
+          "Failed to terminate link. Connection unstable.",
+          "error",
+        );
     }
   },
 

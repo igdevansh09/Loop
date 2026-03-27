@@ -40,6 +40,13 @@ export const useArenaStore = create<ArenaState>((set) => ({
       });
 
       if (error) throw error;
+
+      // 🚀 INJECT THIS TRUTH SERUM:
+      console.log(
+        "RAW ARENA DATA FROM DB:",
+        JSON.stringify(data?.[0], null, 2),
+      );
+
       set({ teams: data || [] });
     } catch (err: any) {
       console.error("Match Fetch Error:", err.message);

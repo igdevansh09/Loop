@@ -119,7 +119,7 @@ export default function SwiperCard({ card }: SwiperCardProps) {
         <Text style={styles.kicker}>PROJECT_NAME //</Text>
         <Text style={styles.projectName}>{card.project_name}</Text>
 
-        <Text style={styles.description}>{card.project_description}</Text>
+        <Text style={styles.description} numberOfLines={4}>{card.project_description}</Text>
 
         <View style={styles.divider} />
 
@@ -156,7 +156,7 @@ export default function SwiperCard({ card }: SwiperCardProps) {
               color={COLORS.background}
             />
             <Text style={styles.constraintText}>
-              {card.required_gender?.toUpperCase() || "ANY"}
+              {card.gender_requirement?.toUpperCase() || "ANY"}
             </Text>
           </View>
         </View>
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     maxHeight: 28, // <-- ISKO DELETE KAR
     overflow: "hidden", // <-- ISKO BHI DELETE KAR
   },
-  
+
   skillTag: {
     backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderWidth: 1,

@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import { useAlertStore } from './useAlertStore';
 
 
 export async function registerForPushNotificationsAsync() {
@@ -248,7 +249,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (err) {
       const error = err as Error;
-      Alert.alert("Authentication Failed", error.message);
+      useAlertStore
+        .getState()
+        .showAlert("Authentication Failed", error.message, "error");
     } finally {
       
       if (!isSuccess) {

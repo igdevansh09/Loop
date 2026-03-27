@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import { COLORS } from "../constants/theme";
 import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
+import { CustomAlert } from "../components/CustomAlert";
 
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => ({
@@ -75,11 +76,12 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="light" />
+      <CustomAlert />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: COLORS.background },
-          
+
           animation: "fade",
         }}
       >

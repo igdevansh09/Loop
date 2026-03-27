@@ -93,7 +93,7 @@ export default function DossierScreen() {
             founder: team.founder_github,
             hackathon_url: team.hackathon_url,
             capacity: team.max_capacity?.toString() || "ANY",
-            gender: team.required_gender || "ANY",
+            gender: team.gender_requirement || "ANY",
             // 🚀 FIXED: Safely pull the founder's college from the team database object first
             founder_college:
               team.founder_college ||

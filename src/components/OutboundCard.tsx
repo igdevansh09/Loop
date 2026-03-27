@@ -5,11 +5,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   Linking,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../constants/theme";
 import * as Haptics from "expo-haptics";
+import { useAlertStore } from "../store/useAlertStore"; // Global Store Hook
 
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -35,6 +35,9 @@ interface OutboundCardProps {
 }
 
 export const OutboundCard = ({ item, onAction }: OutboundCardProps) => {
+  // 🚀 FIXED: Calling the store as a strict React Hook
+  const showAlert = useAlertStore((state) => state.showAlert);
+
   const isAccepted = item.status === "accepted";
   const isRejected = item.status === "rejected";
 
@@ -51,7 +54,12 @@ export const OutboundCard = ({ item, onAction }: OutboundCardProps) => {
 
   const joinMission = () => {
     if (!item.teams.private_community_url) {
-      Alert.alert("ENCRYPTION ERROR", "Comms link not found in data packet.");
+      // 🚀 FIXED: Using the properly extracted hook function
+      showAlert(
+        "ENCRYPTION ERROR",
+        "Comms link not found in data packet.",
+        "error",
+      );
       return;
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -168,7 +176,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  
   statusRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -199,7 +206,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  
   actionPill: {
     flexDirection: "row",
     alignItems: "center",

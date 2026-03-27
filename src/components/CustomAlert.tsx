@@ -9,58 +9,48 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../constants/theme";
-import Animated, { ZoomIn } from "react-native-reanimated";
+import Animated, { ZoomIn, FadeOut } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { useAlertStore } from "../store/useAlertStore";
 
-interface CustomAlertProps {
-  visible: boolean;
-  title: string;
-  message: string;
-  onClose: () => void;
-  type?: "error" | "success" | "warning" | "info";
-}
+export const CustomAlert = () => {
+  const {
+    visible,
+    title,
+    message,
+    type,
+    isConfirm,
+    confirmText,
+    onConfirm,
+    hideAlert,
+  } = useAlertStore();
 
-export const CustomAlert = ({
-  visible,
-  title,
-  message,
-  onClose,
-  type = "info",
-}: CustomAlertProps) => {
   if (!visible) return null;
 
-  const getIcon = () => {
+  const getTheme = () => {
     switch (type) {
       case "error":
-        return <Ionicons name="skull" size={32} color="#ef4444" />;
+        return { icon: "skull", color: "#ef4444" };
       case "success":
-        return <Ionicons name="checkmark-circle" size={32} color="#22c55e" />;
+        return { icon: "checkmark-circle", color: "#22c55e" };
       case "warning":
-        return (
-          <Ionicons name="warning" size={32} color="rgba(234, 179, 8, 1)" />
-        );
+        return { icon: "warning", color: "rgba(234, 179, 8, 1)" };
       default:
-        return (
-          <Ionicons
-            name="information-circle"
-            size={32}
-            color={COLORS.primary}
-          />
-        );
+        return { icon: "information-circle", color: COLORS.primary };
     }
   };
 
-  const getBorderColor = () => {
-    switch (type) {
-      case "error":
-        return "#ef4444";
-      case "success":
-        return "#22c55e";
-      case "warning":
-        return "rgba(234, 179, 8, 1)";
-      default:
-        return COLORS.primary;
-    }
+  const theme = getTheme();
+
+  const handleConfirm = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    if (onConfirm) onConfirm();
+    hideAlert();
+  };
+
+  const handleCancel = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hideAlert();
   };
 
   return (
@@ -68,22 +58,35 @@ export const CustomAlert = ({
       <View style={styles.overlay}>
         <Animated.View
           entering={ZoomIn.duration(200)}
-          style={[styles.alertBox, { borderColor: getBorderColor() }]}
+          exiting={FadeOut}
+          style={[styles.alertBox, { borderColor: theme.color }]}
         >
-          <View style={styles.iconContainer}>{getIcon()}</View>
-          <Text style={[styles.title, { color: getBorderColor() }]}>
-            {title}
-          </Text>
+          <View style={styles.iconContainer}>
+            <Ionicons name={theme.icon as any} size={36} color={theme.color} />
+          </View>
+          <Text style={[styles.title, { color: theme.color }]}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: getBorderColor() }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              onClose();
-            }}
-          >
-            <Text style={styles.buttonText}>ACKNOWLEDGE</Text>
-          </TouchableOpacity>
+
+          {isConfirm ? (
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
+                <Text style={styles.cancelText}>ABORT</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmBtn, { backgroundColor: theme.color }]}
+                onPress={handleConfirm}
+              >
+                <Text style={styles.confirmText}>{confirmText}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: theme.color }]}
+              onPress={handleCancel}
+            >
+              <Text style={styles.buttonText}>ACKNOWLEDGE</Text>
+            </TouchableOpacity>
+          )}
         </Animated.View>
       </View>
     </Modal>
@@ -120,20 +123,37 @@ const styles = StyleSheet.create({
   },
   message: {
     color: COLORS.grey,
-    fontSize: 14,
+    fontSize: 13,
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 20,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
   button: {
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 4,
     width: "100%",
     alignItems: "center",
   },
-  buttonText: {
+  buttonText: { color: COLORS.background, fontWeight: "900", letterSpacing: 1 },
+  buttonRow: { flexDirection: "row", gap: 10, width: "100%" },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    borderRadius: 4,
+  },
+  cancelText: { color: COLORS.grey, fontWeight: "900", letterSpacing: 1 },
+  confirmBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    alignItems: "center",
+    borderRadius: 4,
+  },
+  confirmText: {
     color: COLORS.background,
     fontWeight: "900",
     letterSpacing: 1,
