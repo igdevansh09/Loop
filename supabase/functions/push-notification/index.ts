@@ -1,10 +1,61 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { create, getNumericDate } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
+
+// Helper function to generate OAuth2 Access Token using the Service Account JSON
+async function getAccessToken(serviceAccountJsonStr: string) {
+  const serviceAccount = JSON.parse(serviceAccountJsonStr);
+
+  const jwtHeader = { alg: "RS256", typ: "JWT" };
+  const jwtPayload = {
+    iss: serviceAccount.client_email,
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: "https://oauth2.googleapis.com/token",
+    exp: getNumericDate(3600), // Token expires in 1 hour
+    iat: getNumericDate(0),
+  };
+
+  // The private key might have escaped newlines, we need to unescape them
+  const privateKeyPem = serviceAccount.private_key.replace(/\\n/g, "\n");
+
+  const keyData = privateKeyPem
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\n/g, "");
+
+  const binaryDer = Uint8Array.from(atob(keyData), (c) => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    binaryDer,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const jwt = await create(jwtHeader, jwtPayload, cryptoKey);
+
+  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: jwt,
+    }),
+  });
+
+  const tokenData = await tokenResponse.json();
+  if (!tokenResponse.ok) {
+    throw new Error(
+      `Failed to get access token: ${tokenData.error_description || JSON.stringify(tokenData)}`,
+    );
+  }
+  return tokenData.access_token;
+}
 
 serve(async (req) => {
   try {
     const payload = await req.json();
-    // 🚀 FIXED: Added 'table' to the extraction payload
     const { type, table, record, old_record } = payload;
 
     const supabase = createClient(
@@ -23,9 +74,8 @@ serve(async (req) => {
     if (table === "teams" && type === "INSERT") {
       pushTitle = "NEW MISSION AVAILABLE //";
       pushBody = `A new project '${record.project_name.toUpperCase()}' was just launched in the Arena.`;
-      targetRoute = "index"; // Route to the main Arena
+      targetRoute = `dossier?id=${record.id}`;
 
-      // Fetch all tokens EXCEPT the founder who just created the team
       const { data: users } = await supabase
         .from("users")
         .select("push_tokens")
@@ -46,7 +96,6 @@ serve(async (req) => {
     else if (table === "swipes") {
       let targetUserId = null;
 
-      // Scenario A: New Inbound Application
       if (type === "INSERT" && record.status === "pending") {
         const { data: team } = await supabase
           .from("teams")
@@ -64,10 +113,7 @@ serve(async (req) => {
         pushTitle = "INBOUND SIGNAL //";
         pushBody = `@${profile?.github_handle || "Unknown"} applied to join ${team?.project_name?.toUpperCase()}.`;
         targetRoute = "inbound";
-      }
-
-      // Scenario B: Application Accepted/Rejected
-      else if (type === "UPDATE" && record.status !== old_record?.status) {
+      } else if (type === "UPDATE" && record.status !== old_record?.status) {
         const { data: team } = await supabase
           .from("teams")
           .select("project_name")
@@ -90,7 +136,6 @@ serve(async (req) => {
         return new Response("No action required", { status: 200 });
       }
 
-      // Fetch the specific target's tokens
       if (targetUserId) {
         const { data: userData } = await supabase
           .from("users")
@@ -105,32 +150,51 @@ serve(async (req) => {
     }
 
     // ==========================================
-    // EXECUTE TRANSMISSION
+    // EXECUTE TRANSMISSION (FCM V1 API)
     // ==========================================
     if (tokens.length === 0) {
       return new Response("Target(s) have no push tokens", { status: 200 });
     }
 
-    const messages = tokens.map((token: string) => ({
-      to: token,
-      sound: "default",
-      title: pushTitle,
-      body: pushBody,
-      data: { route: targetRoute },
-    }));
+    const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+    if (!serviceAccountJson) {
+      throw new Error("Missing FIREBASE_SERVICE_ACCOUNT environment variable");
+    }
 
-    const expoResponse = await fetch("https://exp.host/--/api/v2/push/send", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Accept-encoding": "gzip, deflate",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(messages),
+    const projectId = JSON.parse(serviceAccountJson).project_id;
+    const accessToken = await getAccessToken(serviceAccountJson);
+
+    // FCM V1 requires sending messages individually, so we use Promise.all
+    const fcmRequests = tokens.map((token) => {
+      const fcmMessage = {
+        message: {
+          token: token,
+          notification: {
+            title: pushTitle,
+            body: pushBody,
+          },
+          data: {
+            route: targetRoute,
+          },
+        },
+      };
+
+      return fetch(
+        `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(fcmMessage),
+        },
+      ).then((res) => res.json());
     });
 
-    const expoReceipt = await expoResponse.json();
-    return new Response(JSON.stringify(expoReceipt), {
+    const results = await Promise.all(fcmRequests);
+
+    return new Response(JSON.stringify(results), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error: any) {

@@ -13,13 +13,11 @@ import {
 } from "react-native";
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import Constants from 'expo-constants';
 
 
 export async function registerForPushNotificationsAsync() {
   let token;
 
-  
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
@@ -46,18 +44,13 @@ export async function registerForPushNotificationsAsync() {
       return undefined;
     }
 
-    
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    if (!projectId) {
-      console.warn("EAS Project ID is missing from app.json!");
-      return undefined;
-    }
-
     try {
-      token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+      // 🚀 CHANGED: Now fetching the raw Native FCM/APNs token, bypassing Expo's servers.
+      token = (await Notifications.getDevicePushTokenAsync()).data;
+      console.log("Raw Native Device Token fetched:", token);
     } catch (e) {
       console.error("Native Token Fetch Failed:", e);
-      throw e; 
+      throw e;
     }
   } else {
     console.log("Must use physical device for Push Notifications");

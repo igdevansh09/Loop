@@ -17,10 +17,25 @@ import { OutboundCard } from "../../components/OutboundCard";
 
 export default function OutboundScreen() {
   const { user } = useAuthStore();
-  const { outbound, isLoading, fetchLedger, updateRequest } = useLedgerStore();
+  const {
+    outbound,
+    isLoading,
+    fetchLedger,
+    updateRequest,
+    subscribeToLedger,
+    unsubscribeFromLedger,
+  } = useLedgerStore();
 
   useEffect(() => {
-    if (user) fetchLedger(user.id);
+    if (user) {
+      fetchLedger(user.id);
+      subscribeToLedger(user.id); // 🚀 TURN ON REAL-TIME RADAR
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      unsubscribeFromLedger();
+    };
   }, [user]);
 
   const handleRefresh = () => {

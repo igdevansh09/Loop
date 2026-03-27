@@ -8,6 +8,7 @@ import {
   Linking,
   Platform,
   Pressable,
+  ScrollView
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../constants/theme";
@@ -58,10 +59,9 @@ export const ApplicantModal = ({
         >
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>
-              {applicant.teams?.project_name?.toUpperCase()} 
+              {applicant.teams?.project_name?.toUpperCase()}
             </Text>
           </View>
-
 
           <View style={styles.infoBlock}>
             <Text style={styles.label}>IDENTITY_SIGNATURE:</Text>
@@ -85,11 +85,11 @@ export const ApplicantModal = ({
 
           <View style={styles.infoBlock}>
             <Text style={styles.label}>AI_DOSSIER_SUMMARY:</Text>
-            <View style={styles.summaryBox}>
+            <ScrollView style={styles.summaryBox} nestedScrollEnabled={true}>
               <Text style={styles.summaryText}>
                 {applicant.profiles.ai_assessment || "NO INTEL AVAILABLE"}
               </Text>
-            </View>
+            </ScrollView>
           </View>
 
           <View style={styles.infoBlock}>
@@ -165,18 +165,18 @@ const styles = StyleSheet.create({
   },
   githubText: { color: COLORS.white, fontSize: 16, fontWeight: "800" },
 
-  
   summaryBox: {
     backgroundColor: "rgba(255,255,255,0.03)",
     padding: 12,
     borderRadius: 4,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
+    maxHeight: 180,
   },
   summaryText: {
     color: COLORS.white,
     fontSize: 13,
-    lineHeight: 22, 
+    lineHeight: 22,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
 

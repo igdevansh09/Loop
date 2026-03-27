@@ -1,4 +1,3 @@
-import React from "react";
 import {
   View,
   Text,
@@ -7,10 +6,10 @@ import {
   TouchableOpacity,
   Linking as RNLinking,
   Share,
+  ScrollView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import * as Linking from "expo-linking";
 import { COLORS } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -27,8 +26,8 @@ interface SwiperCardProps {
     founder_github: string;
     required_college: string;
     founder_college?: string;
-    max_capacity?: number; 
-    required_gender?: string; 
+    max_capacity?: number;
+    gender_requirement?: string;
     hackathon_url?: string;
   };
 }
@@ -40,7 +39,6 @@ export default function SwiperCard({ card }: SwiperCardProps) {
     ? card.required_skills.split(",").map((s) => s.trim())
     : [];
 
-  
   const matchPercentage = Math.round(card.match_score * 100);
 
   const openGitHub = () => {
@@ -79,9 +77,9 @@ export default function SwiperCard({ card }: SwiperCardProps) {
         description: card.project_description,
         founder: card.founder_github,
         college: card.required_college,
-        founder_college: card.founder_college, 
-        capacity: card.max_capacity?.toString(), 
-        gender: card.required_gender, 
+        founder_college: card.founder_college,
+        capacity: card.max_capacity?.toString(),
+        gender: card.gender_requirement,
         hackathon_url: card.hackathon_url,
       },
     });
@@ -112,17 +110,19 @@ export default function SwiperCard({ card }: SwiperCardProps) {
         </View>
       </View>
 
-      <View style={styles.content}>
+      {/* 🚀 FIXED: Converted to ScrollView to make it screen-adaptive on small devices */}
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 10 }}
+      >
         <Text style={styles.kicker}>PROJECT_NAME //</Text>
         <Text style={styles.projectName}>{card.project_name}</Text>
 
-        <Text style={styles.description} numberOfLines={3}>
-          {card.project_description}
-        </Text>
+        <Text style={styles.description}>{card.project_description}</Text>
 
         <View style={styles.divider} />
 
-        {/* 🚀 UPGRADED: Team Constraints Row */}
         <Text style={styles.kicker}>TEAM_CONSTRAINTS //</Text>
         <View style={styles.constraintsRow}>
           <View style={styles.constraintBadge}>
@@ -163,16 +163,13 @@ export default function SwiperCard({ card }: SwiperCardProps) {
 
         <Text style={styles.kicker}>REQUIRED_STACK //</Text>
         <View style={styles.skillsContainer}>
-          {skills.slice(0, 4).map((skill, index) => (
+          {skills.map((skill, index) => (
             <View key={index} style={styles.skillTag}>
               <Text style={styles.skillText}>{skill}</Text>
             </View>
           ))}
-          <Text style={{ color: COLORS.grey, fontSize: 10, marginTop: 6 }}>
-            {skills.length > 4 && `+${skills.length - 4} more`}
-          </Text>
         </View>
-      </View>
+      </ScrollView>
 
       <View style={styles.identityBlock}>
         <Text style={styles.kicker}>FOUNDER_INTEL //</Text>
@@ -276,7 +273,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     marginVertical: 15,
   },
-  
+
   constraintsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -303,9 +300,10 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 20,
-    maxHeight: 28,
-    overflow: "hidden",
+    maxHeight: 28, // <-- ISKO DELETE KAR
+    overflow: "hidden", // <-- ISKO BHI DELETE KAR
   },
+  
   skillTag: {
     backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderWidth: 1,

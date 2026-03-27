@@ -31,10 +31,25 @@ interface IntelPayload {
 export default function InboundScreen() {
   const { user } = useAuthStore();
   const [selectedIntel, setSelectedIntel] = useState<IntelPayload | null>(null);
-  const { inbound, isLoading, fetchLedger, updateRequest } = useLedgerStore();
+  const {
+    inbound,
+    isLoading,
+    fetchLedger,
+    updateRequest,
+    subscribeToLedger,
+    unsubscribeFromLedger,
+  } = useLedgerStore();
 
   useEffect(() => {
-    if (user) fetchLedger(user.id);
+    if (user) {
+      fetchLedger(user.id);
+      subscribeToLedger(user.id); // 🚀 TURN ON REAL-TIME RADAR
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      unsubscribeFromLedger();
+    };
   }, [user]);
 
   const handleRefresh = () => {
