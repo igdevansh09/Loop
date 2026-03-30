@@ -41,7 +41,6 @@ export default function RootLayout() {
 
           
           if (data && typeof data.route === "string") {
-            console.log(`ROUTING PROTOCOL: Executing jump to /${data.route}`);
             router.push(`/${data.route}` as Href);
           }
         },
@@ -68,7 +67,6 @@ export default function RootLayout() {
 
     
     if (session && (inAuthGroup || isIndexScreen)) {
-      console.log("SESSION DETECTED: Rerouting to Arena //");
       router.replace("/(tabs)" as Href);
     }
   }, [session, isInitialized, segments, router]);

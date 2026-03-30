@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loop // Signal Lost</title>
+  <style>
+    :root {
+      --bg-color: #000000; 
+      --primary: #EAB308; 
+      --white: #FAFAFA;
+      --grey: #9CA3AF;
+      --error: #ef4444;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--white);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .container {
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    .error-code {
+      color: var(--error);
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      margin: 0;
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .kicker {
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      margin-top: 16px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .header {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+      margin: 0 0 16px 0;
+      line-height: 1.1;
+    }
+
+    .scan-line {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--error), transparent);
+      margin-bottom: 24px;
+      opacity: 0.6;
+    }
+
+    .subtext {
+      color: var(--grey);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    .btn {
+      background-color: transparent;
+      color: var(--white);
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 8px;
+      border: 1px solid var(--primary);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn:hover {
+      background-color: rgba(234, 179, 8, 0.1); 
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="error-code">404</div>
+    <div class="kicker">PROTOCOL // FAILED</div>
+    <h1 class="header">SIGNAL LOST</h1>
+    
+    <div class="scan-line"></div>
+    
+    <p class="subtext">
+      The requested telemetry could not be located in this sector. The dossier has either been expunged, or the transmission is corrupt.
+    </p>
+
+    <a href="/" class="btn">
+      RETURN TO SECURE SECTOR
+    </a>
+  </div>
+</body>
+</html>

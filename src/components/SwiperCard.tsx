@@ -39,6 +39,10 @@ export default function SwiperCard({ card }: SwiperCardProps) {
     ? card.required_skills.split(",").map((s) => s.trim())
     : [];
 
+  const DISPLAY_LIMIT = 3;
+  const visibleSkills = skills.slice(0, DISPLAY_LIMIT);
+  const overflowCount = skills.length - DISPLAY_LIMIT;
+
   const matchPercentage = Math.round(card.match_score * 100);
 
   const openGitHub = () => {
@@ -51,14 +55,10 @@ export default function SwiperCard({ card }: SwiperCardProps) {
   const handleShare = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     try {
-      // 🚀 THE FIX: We forcefully construct an HTTPS link.
-      // Note: Replace 'loop.app' with your actual website domain once you buy one.
-      // When a user clicks this on their phone, your website should automatically
-      // redirect them back into the native app using the raw deep link.
-      const shareUrl = `https://loop.app/dossier?id=${card.id}`;
+      const shareUrl = `https://loop-5d7e2.web.app/dossier?id=${card.id}`;
 
       await Share.share({
-        message: `[ENCRYPTED INTEL] I found a high-value project in the Arena: ${card.project_name}.\n\nDecrypt the dossier here: ${shareUrl}`,
+        message: `[DECRYPT INTEL] I found a high-value project in the Arena: ${card.project_name}.\n\nDecrypt the dossier here: ${shareUrl}`,
       });
     } catch (error) {
       console.error("Transmission failed:", error);
@@ -110,7 +110,6 @@ export default function SwiperCard({ card }: SwiperCardProps) {
         </View>
       </View>
 
-      {/* 🚀 FIXED: Converted to ScrollView to make it screen-adaptive on small devices */}
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
@@ -119,7 +118,9 @@ export default function SwiperCard({ card }: SwiperCardProps) {
         <Text style={styles.kicker}>PROJECT_NAME //</Text>
         <Text style={styles.projectName}>{card.project_name}</Text>
 
-        <Text style={styles.description} numberOfLines={4}>{card.project_description}</Text>
+        <Text style={styles.description} numberOfLines={4}>
+          {card.project_description}
+        </Text>
 
         <View style={styles.divider} />
 
@@ -163,11 +164,27 @@ export default function SwiperCard({ card }: SwiperCardProps) {
 
         <Text style={styles.kicker}>REQUIRED_STACK //</Text>
         <View style={styles.skillsContainer}>
-          {skills.map((skill, index) => (
+          {visibleSkills.map((skill, index) => (
             <View key={index} style={styles.skillTag}>
               <Text style={styles.skillText}>{skill}</Text>
             </View>
           ))}
+
+          {overflowCount > 0 && (
+            <View
+              style={[
+                styles.skillTag,
+                {
+                  backgroundColor: `${COLORS.primary}20`,
+                  borderColor: COLORS.primary,
+                },
+              ]}
+            >
+              <Text style={[styles.skillText, { color: COLORS.primary }]}>
+                +{overflowCount} MORE
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -300,8 +317,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 20,
-    maxHeight: 28, // <-- ISKO DELETE KAR
-    overflow: "hidden", // <-- ISKO BHI DELETE KAR
   },
 
   skillTag: {

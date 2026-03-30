@@ -31,11 +31,7 @@ interface ApplicantModalProps {
   onClose: () => void;
 }
 
-export const ApplicantModal = ({
-  visible,
-  applicant,
-  onClose,
-}: ApplicantModalProps) => {
+export const ApplicantModal = ({ visible, applicant, onClose }: ApplicantModalProps) => {
   if (!applicant) return null;
 
   const openGitHub = () => {
@@ -45,17 +41,18 @@ export const ApplicantModal = ({
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <Pressable
-        style={styles.modalOverlay}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          onClose();
-        }}
-      >
+      <View style={styles.modalOverlay}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onClose();
+          }}
+        />
+
         <Animated.View
           entering={ZoomIn.duration(300).springify().damping(18)}
           style={styles.modalContent}
-          onStartShouldSetResponder={() => true}
         >
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>
@@ -85,7 +82,11 @@ export const ApplicantModal = ({
 
           <View style={styles.infoBlock}>
             <Text style={styles.label}>AI_DOSSIER_SUMMARY:</Text>
-            <ScrollView style={styles.summaryBox} nestedScrollEnabled={true}>
+            <ScrollView
+              style={styles.summaryBox}
+              contentContainerStyle={styles.summaryContent}
+              showsVerticalScrollIndicator={true}
+            >
               <Text style={styles.summaryText}>
                 {applicant.profiles.ai_assessment || "NO INTEL AVAILABLE"}
               </Text>
@@ -103,10 +104,10 @@ export const ApplicantModal = ({
             </View>
           </View>
         </Animated.View>
-      </Pressable>
+      </View>
     </Modal>
   );
-};
+};;
 
 const styles = StyleSheet.create({
   modalOverlay: {
@@ -167,11 +168,13 @@ const styles = StyleSheet.create({
 
   summaryBox: {
     backgroundColor: "rgba(255,255,255,0.03)",
-    padding: 12,
     borderRadius: 4,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
     maxHeight: 180,
+  },
+  summaryContent: {
+    padding: 12,
   },
   summaryText: {
     color: COLORS.white,

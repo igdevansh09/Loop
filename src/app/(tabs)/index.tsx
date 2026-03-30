@@ -134,15 +134,35 @@ export default function ArenaScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 0.4 }}
       />
-
       <Animated.View
         entering={FadeInDown.delay(100).springify().damping(15)}
         style={styles.headerContainer}
       >
-        <Text style={styles.kicker}>PROTOCOL // ACTIVE</Text>
-        <Text style={styles.header}>THE ARENA</Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <View>
+            <Text style={styles.kicker}>PROTOCOL // ACTIVE</Text>
+            <Text style={styles.header}>THE ARENA</Text>
+          </View>
+          <TouchableOpacity
+            onPress={handleRescan}
+            disabled={isLoading || isForging}
+            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          >
+            <Ionicons
+              name="refresh-outline"
+              size={24}
+              color={COLORS.primary}
+              style={{ opacity: isLoading || isForging ? 0.3 : 0.8 }}
+            />
+          </TouchableOpacity>
+        </View>
       </Animated.View>
-
       <View style={styles.swiperContainer}>
         {teams.length > 0 && !allCardsSwiped ? (
           <Animated.View
@@ -154,7 +174,7 @@ export default function ArenaScreen() {
               renderCard={(card) => <SwiperCard card={card} />}
               onSwipedLeft={(index) => handlePhysicalSwipe(index, "left")}
               onSwipedRight={(index) => handlePhysicalSwipe(index, "right")}
-              onSwipedAll={() => setAllCardsSwiped(true)} 
+              onSwipedAll={() => setAllCardsSwiped(true)}
               cardIndex={0}
               containerStyle={{ backgroundColor: "transparent", flex: 1 }}
               cardVerticalMargin={0}

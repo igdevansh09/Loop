@@ -282,7 +282,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             );
 
             if (rpcError) throw rpcError;
-            console.log("UPLINK SEVERED: Push Token Removed from array.");
           }
         } catch (pushError) {
           

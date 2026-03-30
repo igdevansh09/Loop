@@ -20,7 +20,24 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.igdevansh.loop",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "loop-5d7e2.web.app",
+              "pathPrefix": "/dossier"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png",
@@ -46,15 +63,11 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "2f8862b6-2851-401f-8d32-5927ef81bbac"
+        "projectId": "1520b7cc-b2fe-466f-b407-433f74b0d413"
       }
     },
-    "owner": "igdevansh",
     "runtimeVersion": {
       "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/2f8862b6-2851-401f-8d32-5927ef81bbac"
     }
   }
 }

@@ -8,6 +8,7 @@ import {
   Platform,
   Linking,
   ActivityIndicator,
+  Share,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,7 +18,6 @@ import { COLORS } from "../constants/theme";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { supabase } from "../lib/supabase";
 
-// 🚀 IMPORT THE STORES
 import { useAuthStore } from "../store/useAuthStore";
 import { useArenaStore } from "../store/useArenaStore";
 
@@ -33,7 +33,6 @@ const CornerBrackets = ({ color = COLORS.primary }) => (
 export default function DossierScreen() {
   const router = useRouter();
 
-  // 🚀 HOOK INTO GLOBAL STATE
   const { user } = useAuthStore();
   const { processSwipe, removeTeamFromDeck } = useArenaStore();
 
@@ -94,7 +93,6 @@ export default function DossierScreen() {
             hackathon_url: team.hackathon_url,
             capacity: team.max_capacity?.toString() || "ANY",
             gender: team.gender_requirement || "ANY",
-            // 🚀 FIXED: Safely pull the founder's college from the team database object first
             founder_college:
               team.founder_college ||
               team.training_ground ||
@@ -142,6 +140,18 @@ export default function DossierScreen() {
     }
   };
 
+  const handleShare = async () => {
+    if (!params.id) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await Share.share({
+        message: `DECRYPT INTEL: https://loop-5d7e2.web.app/dossier?id=${params.id}`,
+      });
+    } catch (error) {
+      console.error("Transmission failed:", error);
+    }
+  };
+
   const handleApply = async () => {
     if (!user || !params.id) return;
 
@@ -149,10 +159,7 @@ export default function DossierScreen() {
     setIsTransmitting(true);
 
     try {
-      // 🚀 FIXED 1: Actually submit the application to the Swipes database
       await processSwipe(user.id, params.id, "right");
-
-      // 🚀 FIXED 2: Remove the card from the background UI deck instantly
       removeTeamFromDeck(params.id);
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -225,7 +232,12 @@ export default function DossierScreen() {
           <Ionicons name="chevron-back" size={24} color={COLORS.primary} />
           <Text style={styles.backText}>ARENA</Text>
         </TouchableOpacity>
-        <Text style={styles.navTitle}>DATA_STREAM</Text>
+
+        {/* 🚀 ADDED: Active Share Action in Navbar */}
+        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+          <Text style={styles.navTitle}>SHARE_INTEL</Text>
+          <Ionicons name="share-outline" size={16} color={COLORS.primary} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -436,10 +448,22 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 1,
   },
+  shareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
   navTitle: {
-    color: COLORS.grey,
+    color: COLORS.primary,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     fontSize: 10,
+    fontWeight: "800",
     letterSpacing: 2,
   },
   scrollContent: { paddingHorizontal: 16, paddingTop: 30, paddingBottom: 100 },

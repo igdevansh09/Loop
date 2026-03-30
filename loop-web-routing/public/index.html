@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loop // Dossier Restricted</title>
+  <style>
+    :root {
+      --primary: #EAB308;
+      --secondary: #CA8A04;
+      --background: #000000;
+      --surface: #111111;
+      --surface-light: #494646;
+      --white: #FAFAFA;
+      --grey: #9CA3AF;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      /* Matches your React Native LinearGradient fading to transparent/black */
+      background: var(--background);
+      background-image: linear-gradient(180deg, rgba(234, 179, 8, 0.12) 0%, var(--background) 40%);
+      color: var(--white);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .hud-box {
+      max-width: 420px;
+      background-color: rgba(17, 17, 17, 0.7); /* Translucent surface */
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    /* Mimicking your CornerBrackets component */
+    .hud-box::before, .hud-box::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-color: var(--primary);
+      border-style: solid;
+      pointer-events: none;
+    }
+    
+    .hud-box::before {
+      top: -1px; left: -1px;
+      border-width: 2px 0 0 2px;
+    }
+    
+    .hud-box::after {
+      bottom: -1px; right: -1px;
+      border-width: 0 2px 2px 0;
+    }
+
+    .kicker {
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .header {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+      margin: 0 0 20px 0;
+      line-height: 1.1;
+      color: var(--white);
+    }
+
+    .scan-line {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      margin-bottom: 24px;
+      opacity: 0.6;
+    }
+
+    .subtext {
+      color: var(--grey);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    .btn {
+      /* Gradient utilizing both primary and secondary */
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--background);
+      text-decoration: none;
+      padding: 18px 32px;
+      border-radius: 4px; /* Harder corners match the terminal vibe better than 8px */
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 20px rgba(234, 179, 8, 0.2); 
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 10px rgba(234, 179, 8, 0.1); 
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="hud-box">
+    <div class="kicker">PROTOCOL // ENCRYPTED</div>
+    <h1 class="header">DOSSIER ACCESS RESTRICTED</h1>
+    
+    <div class="scan-line"></div>
+    
+    <p class="subtext">
+      Truth vector requires local calibration. Initialize the Loop arena on your device to extract this telemetry.
+    </p>
+
+    <a href="https://github.com/igdevansh09/Loop/releases/download/apps/Loop.apk" class="btn">
+      INITIALIZE LOOP
+    </a>
+  </div>
+</body>
+</html>
