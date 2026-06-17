@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -18,7 +17,6 @@ import { COLORS } from "../../constants/theme";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useLaunchStore } from "../../store/useLaunchStore";
 
-// 🚀 IMPORT THE GLOBAL ALERT STORE
 import { useAlertStore } from "../../store/useAlertStore";
 
 const springConfig = { damping: 15, stiffness: 100 };
@@ -218,8 +216,6 @@ const TerminalSkillInput = () => {
 export default function CreateTeamScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-
-  // 🚀 HOOK INTO THE GLOBAL ALERT STORE
   const showAlert = useAlertStore((state) => state.showAlert);
 
   const {
@@ -237,7 +233,6 @@ export default function CreateTeamScreen() {
   } = useLaunchStore();
 
   const handleLaunch = async () => {
-    // 1. Check for missing fields
     if (
       !projectName ||
       !hackathonUrl ||
@@ -246,15 +241,12 @@ export default function CreateTeamScreen() {
       requiredSkills.length === 0
     ) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      // 🚀 FIXED: Replaced native Alert
       showAlert("MISSING DATA", "Fill out all required fields.", "error");
       return;
     }
 
-    // 2. Enforce minimum description length directly on launch
     if (description.length < 50) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      // 🚀 FIXED: Replaced native Alert
       showAlert(
         "SIGNAL REJECTED",
         "Description too short. Explain the architecture.",
@@ -268,10 +260,9 @@ export default function CreateTeamScreen() {
     try {
       await launchTeam(user!.id, user?.user_metadata?.user_name || "unknown");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.push("/(tabs)");
+      router.push("/(drawer)/(tabs)");
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      // 🚀 FIXED: Replaced native Alert
       showAlert("DATABASE ERROR", err.message, "error");
     }
   };
@@ -463,6 +454,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
     zIndex: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   kicker: {
     color: COLORS.primary,

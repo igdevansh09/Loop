@@ -14,7 +14,6 @@ interface ArenaState {
     direction: "left" | "right",
   ) => Promise<void>;
 
-  // 🚀 NEW: Added a way to manually pop a card from the deck (used by the Dossier screen)
   removeTeamFromDeck: (teamId: string) => void;
 }
 
@@ -25,7 +24,6 @@ export const useArenaStore = create<ArenaState>((set) => ({
 
   setForging: (status) => set({ isForging: status }),
 
-  // 🚀 NEW: Instantly removes the card from the UI
   removeTeamFromDeck: (teamId) =>
     set((state) => ({
       teams: state.teams.filter((t) => t.id !== teamId),

@@ -1,31 +1,33 @@
-import React, { useState, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Image,
   ActivityIndicator,
+  Image,
   Platform,
   RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
-  FadeInDown,
   FadeIn,
-  useSharedValue,
+  FadeInDown,
   useAnimatedStyle,
-  withSpring,
+  useSharedValue,
   withDelay,
+  withSpring,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
-import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "../../constants/theme";
-import { useAuthStore, UserProfile } from "../../store/useAuthStore";
-import { useRouter } from "expo-router";
-import { useAlertStore } from "../../store/useAlertStore"; // Fixed path just in case
+import ProfileInfoBanner from "../../../components/ProfileInfoBanner";
+import { COLORS } from "../../../constants/theme";
+import { useAlertStore } from "../../../store/useAlertStore";
+import { useAuthStore, UserProfile } from "../../../store/useAuthStore";
+import { useKeyStore } from "../../../store/useKeyStore";
+import HamburgerButton from "@/src/components/HamburgerButton";
 
 interface ExtendedProfile extends UserProfile {
   training_ground: string | null;
@@ -117,14 +119,22 @@ export default function ProfileScreen() {
     isGeneratingProfile,
   } = useAuthStore();
 
-  const router = useRouter();
-
-  // 🚀 PROPERLY HOOKING INTO THE ALERT STORE
   const { showAlert, showConfirm } = useAlertStore();
-
+  const { userApiKey, saveKey, loadKey } = useKeyStore();
   const [collegeInput, setCollegeInput] = useState("");
+  const [apiKeyInput, setApiKeyInput] = useState("");
   const [isBurning, setIsBurning] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    loadKey();
+  }, []);
+
+  useEffect(() => {
+    if (userApiKey) {
+      setApiKeyInput(userApiKey);
+    }
+  }, [userApiKey]);
 
   const currentProfile = profile as ExtendedProfile | null;
   const githubMetadata = user?.user_metadata;
@@ -142,11 +152,6 @@ export default function ProfileScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showAlert(
-        "UPLINK FAILED",
-        "Could not sync with GitHub. Try again later.",
-        "error",
-      );
     }
     setIsSyncing(false);
   };
@@ -169,9 +174,23 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleSaveApiKey = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (!apiKeyInput.trim()) {
+      showAlert("INVALID KEY", "API Key cannot be empty.", "warning");
+      return;
+    }
+    await saveKey(apiKeyInput.trim());
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    showAlert(
+      "KEY SECURED",
+      "API Key encrypted and stored locally.",
+      "success",
+    );
+  };
+
   const handleLogout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
-    // 🚀 FIXED: Using the custom global confirmation alert
     showConfirm(
       "DISCONNECT",
       "Terminate current session?",
@@ -185,7 +204,6 @@ export default function ProfileScreen() {
 
   const handleDeleteAccount = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    // 🚀 FIXED: Using the custom global confirmation alert
     showConfirm(
       "BURN IDENTITY",
       "This action is IRREVERSIBLE. Your vector signature, telemetry, and arena history will be permanently eradicated.",
@@ -214,6 +232,7 @@ export default function ProfileScreen() {
         end={{ x: 0.5, y: 0.4 }}
       />
 
+      <HamburgerButton />
       <Animated.View
         entering={FadeInDown.delay(100).springify().damping(15)}
         style={styles.headerContainer}
@@ -276,38 +295,14 @@ export default function ProfileScreen() {
                 entering={FadeIn.delay(1200)}
                 style={styles.timestampText}
               >
-                ENTRY_EPOCH: {Math.floor(Date.now() / 1000)}
+                ENTRY_DATE: {new Date().toDateString().toUpperCase()}
               </Animated.Text>
             </View>
           </View>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(250).springify()}>
-          <TouchableOpacity
-            style={styles.commandCenterLink}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push("/command-center");
-            }}
-          >
-            <CornerBrackets color={COLORS.primary} />
-            <View style={styles.commandRow}>
-              <Ionicons name="terminal" size={20} color={COLORS.primary} />
-              <View style={{ flex: 1, marginLeft: 15 }}>
-                <Text style={styles.commandTitle}>COMMAND_CENTER</Text>
-                <Text style={styles.commandSub}>
-                  MANAGE ACTIVE MISSIONS & CAPACITY
-                </Text>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={COLORS.primary}
-              />
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
-
+        <ProfileInfoBanner />
+        
         {isGeneratingProfile ? (
           <Animated.View
             entering={FadeInDown.springify()}
@@ -502,6 +497,41 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Animated.View
+          entering={FadeInDown.delay(750).springify()}
+          style={styles.hudBox}
+        >
+          <CornerBrackets />
+          <View style={styles.sectionHeader}>
+            <Ionicons name="key" size={14} color={COLORS.primary} />
+            <Text style={styles.sectionLabel}>NEURAL UPLINK (API KEY)</Text>
+          </View>
+
+          <Text style={styles.inputLabel}>GEMINI AI KEY</Text>
+          <Text style={[styles.warningText, { marginBottom: 10 }]}>
+            First generation is ON THE HOUSE. Upon exhaustion, inject your own
+            Gemini API key to restore AI capabilities. Key remains local and
+            encrypted in the Secure Device.
+          </Text>
+
+          <View style={styles.burnRow}>
+            <TextInput
+              style={styles.burnInput}
+              placeholder="AIzaSy..."
+              placeholderTextColor="rgba(255, 255, 255, 0.3)"
+              secureTextEntry={true}
+              value={apiKeyInput}
+              onChangeText={setApiKeyInput}
+            />
+            <TouchableOpacity
+              style={[styles.burnButton, { backgroundColor: COLORS.primary }]}
+              onPress={handleSaveApiKey}
+            >
+              <Ionicons name="save" size={20} color={COLORS.background} />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        <Animated.View
           entering={FadeInDown.delay(800).springify()}
           style={styles.exitContainer}
         >
@@ -539,6 +569,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
     zIndex: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   kicker: {
     color: COLORS.primary,

@@ -1,12 +1,10 @@
 import { Redirect, Tabs } from "expo-router";
-
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { COLORS } from "../../constants/theme";
-import { useAuthStore } from "../../store/useAuthStore";
-import { useLedgerStore } from "../../store/useLedgerStore";
-
+import { COLORS } from "../../../constants/theme";
+import { useAuthStore } from "../../../store/useAuthStore";
+import { useLedgerStore } from "../../../store/useLedgerStore";
 
 function TabBarIcon({
   name,
@@ -39,10 +37,11 @@ export default function TabLayout() {
         tabBarInactiveTintColor: COLORS.grey,
         tabBarStyle: {
           backgroundColor: COLORS.background,
-          paddingBottom: insets.bottom,
+          paddingBottom: insets.bottom + 10,
+          height: 60 + insets.bottom,
           paddingLeft: insets.left,
           paddingRight: insets.right,
-          borderTopColor: "rgba(255,255,255,0.05)", 
+          borderTopColor: "rgba(255,255,255,0.05)",
         },
         headerShown: false,
       }}
@@ -51,17 +50,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Arena",
-          
+
           tabBarIcon: ({ color }) => <TabBarIcon name="layers" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="create"
-        options={{
-          title: "Launch",
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="add-circle" color={color} />
-          ),
         }}
       />
       <Tabs.Screen
@@ -76,15 +66,6 @@ export default function TabLayout() {
             backgroundColor: COLORS.primary,
             color: COLORS.background,
           },
-        }}
-      />
-      <Tabs.Screen
-        name="outbound"
-        options={{
-          title: "Outbound",
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="arrow-up-circle" color={color} />
-          ),
         }}
       />
       <Tabs.Screen

@@ -1,27 +1,26 @@
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   ActivityIndicator,
   Dimensions,
+  StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
-import * as Haptics from "expo-haptics";
 import Animated, {
   FadeIn,
   FadeInDown,
   FadeOut,
   Layout,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-
-import { COLORS } from "../../constants/theme";
-import SwiperCard from "../../components/SwiperCard";
-import { useAuthStore } from "../../store/useAuthStore";
-import { useArenaStore } from "../../store/useArenaStore";
+import SwiperCard from "../../../components/SwiperCard";
+import { COLORS } from "../../../constants/theme";
+import { useArenaStore } from "../../../store/useArenaStore";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const { height } = Dimensions.get("window");
 
@@ -36,7 +35,6 @@ export default function ArenaScreen() {
     processSwipe,
   } = useArenaStore();
 
-  
   const [allCardsSwiped, setAllCardsSwiped] = useState(false);
 
   useEffect(() => {
@@ -49,7 +47,7 @@ export default function ArenaScreen() {
         setForging(false);
       } else {
         await fetchMatches(user.id);
-        setAllCardsSwiped(false); 
+        setAllCardsSwiped(false);
       }
     };
 
@@ -72,14 +70,12 @@ export default function ArenaScreen() {
     processSwipe(user!.id, team.id, direction);
   };
 
-  
   const handleRescan = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setAllCardsSwiped(false);
     await fetchMatches(user!.id);
   };
 
-  
   if (isForging) {
     return (
       <Animated.View
@@ -102,7 +98,6 @@ export default function ArenaScreen() {
     );
   }
 
-  
   if (isLoading) {
     return (
       <Animated.View
@@ -125,7 +120,6 @@ export default function ArenaScreen() {
     );
   }
 
-  
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -138,30 +132,8 @@ export default function ArenaScreen() {
         entering={FadeInDown.delay(100).springify().damping(15)}
         style={styles.headerContainer}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <View>
-            <Text style={styles.kicker}>PROTOCOL // ACTIVE</Text>
-            <Text style={styles.header}>THE ARENA</Text>
-          </View>
-          <TouchableOpacity
-            onPress={handleRescan}
-            disabled={isLoading || isForging}
-            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-          >
-            <Ionicons
-              name="refresh-outline"
-              size={24}
-              color={COLORS.primary}
-              style={{ opacity: isLoading || isForging ? 0.3 : 0.8 }}
-            />
-          </TouchableOpacity>
-        </View>
+          <Text style={styles.kicker}>PROTOCOL // ACTIVE</Text>
+          <Text style={styles.header}>THE ARENA</Text>
       </Animated.View>
       <View style={styles.swiperContainer}>
         {teams.length > 0 && !allCardsSwiped ? (
@@ -272,6 +244,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
     zIndex: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   kicker: {
     color: COLORS.primary,
@@ -327,9 +301,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     maxWidth: "85%",
     lineHeight: 20,
-    marginBottom: 30, 
+    marginBottom: 30,
   },
-  
+
   rescanButton: {
     backgroundColor: COLORS.primary,
     flexDirection: "row",

@@ -29,7 +29,7 @@ export default function InitialRouting() {
 
   
   if (session) {
-    return <Redirect href="/(tabs)" />; 
+    return <Redirect href="/(drawer)/(tabs)" />; 
   } else if (hasSeenOnboarding) {
     return <Redirect href="/(auth)/login" />; 
   } else {

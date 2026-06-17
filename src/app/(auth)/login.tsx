@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from "react-native";
-import { useRouter } from "expo-router"; 
+import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   FadeInDown,
@@ -22,26 +22,22 @@ import * as Haptics from "expo-haptics";
 import { useAuthStore } from "../../store/useAuthStore";
 import { COLORS } from "../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import RulesModal from "../../components/RulesModal";
 
 const { height } = Dimensions.get("window");
 
 export default function LoginScreen() {
   const router = useRouter();
   const { loginWithGithub, isAuthenticating, session } = useAuthStore();
-
-  
-  
   const isProcessing = isAuthenticating || !!session;
+  const [isRulesModalVisible, setRulesModalVisible] = useState(false);
 
-  
   useEffect(() => {
     if (session) {
-      
-      router.replace("/");
+      router.replace("/(drawer)/(tabs)");
     }
   }, [session, router]);
 
-  
   const flashOpacity = useSharedValue(1);
   const iconScale = useSharedValue(4);
   const iconY = useSharedValue(-height / 2);
@@ -81,9 +77,6 @@ export default function LoginScreen() {
   }));
 
   const brutalSpring = { damping: 14, stiffness: 120, mass: 0.8 };
-
-  
-  
 
   return (
     <View style={styles.container}>
@@ -126,8 +119,7 @@ export default function LoginScreen() {
                 .damping(brutalSpring.damping)}
               style={styles.subtitle}
             >
-              The Arena requires biometric truth.{"\n"}
-              Link your GitHub to generate your profile.
+              {`The Arena requires biometric truth.\nLink your GitHub to generate your profile.`}
             </Animated.Text>
           </View>
 
@@ -135,17 +127,35 @@ export default function LoginScreen() {
             entering={FadeInDown.delay(600)
               .springify()
               .damping(brutalSpring.damping)}
+            style={styles.actionContainer}
           >
+            <TouchableOpacity
+              style={styles.rulesTrigger}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setRulesModalVisible(true);
+              }}
+            >
+              <Text style={styles.rulesTriggerText}>
+                [ VIEW EVALUATION PROTOCOLS ]
+              </Text>
+            </TouchableOpacity>
+
+            <RulesModal
+              visible={isRulesModalVisible}
+              onClose={() => setRulesModalVisible(false)}
+            />
+
             <TouchableOpacity
               style={[styles.button, isProcessing && styles.buttonDisabled]}
               onPress={async () => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 await loginWithGithub();
               }}
-              disabled={isProcessing} 
+              disabled={isProcessing}
               activeOpacity={0.8}
             >
-              {isProcessing ? ( 
+              {isProcessing ? (
                 <View style={styles.buttonContent}>
                   <ActivityIndicator color={COLORS.background} size="small" />
                   <Text style={styles.buttonText}>INITIATING HANDSHAKE...</Text>
@@ -232,6 +242,21 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: "500",
   },
+  actionContainer: {
+    width: "100%",
+  },
+  rulesTrigger: {
+    alignSelf: "center",
+    marginBottom: 20,
+    padding: 10,
+  },
+  rulesTriggerText: {
+    color: COLORS.primary,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
+    textDecorationLine: "underline",
+  },
   button: {
     backgroundColor: COLORS.white,
     paddingVertical: 18,
@@ -259,7 +284,7 @@ const styles = StyleSheet.create({
   },
   systemFooter: {
     position: "absolute",
-    bottom: 40,
+    bottom: 60,
     width: "100%",
     alignItems: "center",
     gap: 5,

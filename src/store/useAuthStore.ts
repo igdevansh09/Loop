@@ -1,20 +1,19 @@
-import { create } from 'zustand';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
+import { create } from "zustand";
+import { Session, User } from "@supabase/supabase-js";
+import { supabase } from "../lib/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 import {
-  Alert,
   AppState,
   AppStateStatus,
   NativeEventSubscription,
   Platform,
 } from "react-native";
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { useAlertStore } from './useAlertStore';
-
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import { useAlertStore } from "./useAlertStore";
+import { useKeyStore } from "./useKeyStore";
 
 export async function registerForPushNotificationsAsync() {
   let token;
@@ -46,7 +45,6 @@ export async function registerForPushNotificationsAsync() {
     }
 
     try {
-      // 🚀 CHANGED: Now fetching the raw Native FCM/APNs token, bypassing Expo's servers.
       token = (await Notifications.getDevicePushTokenAsync()).data;
       console.log("Raw Native Device Token fetched:", token);
     } catch (e) {
@@ -60,8 +58,6 @@ export async function registerForPushNotificationsAsync() {
   return token;
 }
 
-
-
 WebBrowser.maybeCompleteAuthSession();
 
 export interface GithubStats {
@@ -70,18 +66,16 @@ export interface GithubStats {
   topLanguages: { lang: string; percentage: number }[];
 }
 
-
 export interface UserProfile {
   id: string;
   training_ground: string | null;
   available_hours_per_day: number | null;
-  raw_github_data: any | null; 
-  ai_assessment: string | null;     
-  ai_primary_stack: string | null;  
-  ai_weekend_build: string | null;  
-  [key: string]: any; 
+  raw_github_data: any | null;
+  ai_assessment: string | null;
+  ai_primary_stack: string | null;
+  ai_weekend_build: string | null;
+  [key: string]: any;
 }
-
 
 interface AuthState {
   session: Session | null;
@@ -100,13 +94,13 @@ interface AuthState {
   githubStats: GithubStats | null;
   deleteAccount: () => Promise<boolean>;
   registerDeviceToken: () => Promise<void>;
-  isGeneratingProfile: boolean; 
+  isGeneratingProfile: boolean;
 }
 
-
 let appStateListener: NativeEventSubscription | null = null;
-let authListener: { data: { subscription: { unsubscribe: () => void } } } | null = null;
-
+let authListener: {
+  data: { subscription: { unsubscribe: () => void } };
+} | null = null;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
@@ -115,12 +109,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   hasSeenOnboarding: false,
   isAuthenticating: false,
-  isGeneratingProfile: false, 
+  isGeneratingProfile: false,
   githubStats: null,
 
   initializeAuth: async () => {
     try {
-      
       if (!appStateListener) {
         appStateListener = AppState.addEventListener(
           "change",
@@ -150,12 +143,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         hasSeenOnboarding,
       });
 
-      
       if (session?.user) {
         await get().fetchProfile(session.user.id);
       }
 
-      
       if (!authListener) {
         authListener = supabase.auth.onAuthStateChange((event, newSession) => {
           if (
@@ -185,7 +176,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loginWithGithub: async () => {
     set({ isAuthenticating: true });
-    let isSuccess = false; 
+    let isSuccess = false;
 
     try {
       const redirectUrl = Linking.createURL("");
@@ -208,7 +199,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       );
 
       if (result.type === "success" && result.url) {
-        
         const hashIndex = result.url.indexOf("#");
         const queryIndex = result.url.indexOf("?");
 
@@ -242,7 +232,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           });
           if (sessionError) throw sessionError;
 
-          isSuccess = true; 
+          isSuccess = true;
         } else {
           throw new Error("Tokens missing from URL payload.");
         }
@@ -253,7 +243,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .getState()
         .showAlert("Authentication Failed", error.message, "error");
     } finally {
-      
       if (!isSuccess) {
         set({ isAuthenticating: false });
       }
@@ -262,14 +251,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     try {
-      
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (user) {
         try {
-          
           const token = await registerForPushNotificationsAsync();
 
           if (token) {
@@ -284,7 +271,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             if (rpcError) throw rpcError;
           }
         } catch (pushError) {
-          
           console.warn(
             "UPLINK BYPASSED ON LOGOUT: Could not remove token. Native Firebase may not be initialized.",
             pushError,
@@ -292,7 +278,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
 
-      
       await supabase.auth.signOut();
       set({
         user: null,
@@ -306,7 +291,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  
   registerDeviceToken: async () => {
     try {
       const {
@@ -318,19 +302,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       let token;
       try {
-        
         token = await registerForPushNotificationsAsync();
       } catch (firebaseError) {
-        
         console.warn(
           "UPLINK BYPASSED: Native Firebase is not initialized. Notifications are disabled for this session.",
           firebaseError,
         );
-        return; 
+        return;
       }
 
       if (token) {
-        
         const { error: rpcError } = await supabase.rpc("add_push_token", {
           p_user_id: user.id,
           p_token: token,
@@ -386,7 +367,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     if (!data) {
-      
       if (retryCount >= 3) {
         console.error(
           "CRITICAL: Database row not found after 3 retries. Trigger failure or RLS block.",
@@ -401,7 +381,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    
     const currentState = get().profile;
     if (currentState?.ai_assessment && !data.ai_assessment) {
       console.log("Stale DB read detected. Preserving local AI state...");
@@ -452,7 +431,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         githubStats: { repoCount, totalStars, topLanguages },
       });
 
-      
       if (!data.ai_assessment && !get().isGeneratingProfile) {
         console.log("No AI Assessment found. Igniting Forge...");
         get().generateAiProfile();
@@ -474,6 +452,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       console.log("IGNITING FORGE FOR:", githubHandle);
 
+      const userApiKey = useKeyStore.getState().userApiKey;
+      const headers: Record<string, string> = {};
+
+      if (userApiKey) {
+        headers["x-user-gemini-key"] = userApiKey;
+      }
+      console.log("Uplink Custom Key Status:", !!userApiKey);
+
       const { data, error } = await supabase.functions.invoke(
         "generate-profile",
         {
@@ -481,12 +467,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             user_id: user.id,
             github_handle: githubHandle,
           },
+          headers: headers,
         },
       );
 
-      if (error) throw error;
+      if (error) {
+        let errorMessage = error.message;
+        try {
+          const errorBody = await error.context?.json();
+          if (errorBody?.error) errorMessage = errorBody.error;
+        } catch (e) {
+          console.error("error in api key", e)
+        }
 
-      
+        if (errorMessage === "FREE_LIMIT_EXHAUSTED") {
+          useAlertStore
+            .getState()
+            .showAlert(
+              "UPLINK DENIED",
+              "Free generation limit exhausted. Inject your Gemini API Key in the neural uplink section.",
+              "warning",
+            );
+          return false;
+        }
+
+        if (errorMessage === "INVALID_CUSTOM_KEY") {
+          useAlertStore
+            .getState()
+            .showAlert(
+              "INVALID KEY",
+              "The Gemini API key provided is invalid, expired, or out of quota. Re-enter a valid key.",
+              "error",
+            );
+          return false;
+        }
+
+        throw new Error(errorMessage || "Failed to generate AI profile");
+      }
+
       if (data?.profile) {
         set((state) => ({
           profile: state.profile
@@ -500,9 +518,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }));
       }
 
-      
-      
-      
       setTimeout(() => {
         get().fetchProfile(user.id);
       }, 3000);
@@ -510,6 +525,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return true;
     } catch (err: any) {
       console.error("Forge Ignition Failed:", err.message);
+      useAlertStore
+        .getState()
+        .showAlert(
+          "SYSTEM FAILURE",
+          "Profile generation failed. Check your network or API limits.",
+          "error",
+        );
       return false;
     } finally {
       set({ isGeneratingProfile: false });
@@ -519,11 +541,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   deleteAccount: async () => {
     set({ isAuthenticating: true });
     try {
-      
       const { error } = await supabase.rpc("delete_user");
       if (error) throw error;
 
-      
       await supabase.auth.signOut();
       set({ session: null, user: null, profile: null, githubStats: null });
 

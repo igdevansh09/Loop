@@ -39,35 +39,28 @@ export default function RootLayout() {
         (response: Notifications.NotificationResponse) => {
           const data = response.notification.request.content.data;
 
-          
           if (data && typeof data.route === "string") {
             router.push(`/${data.route}` as Href);
           }
         },
       );
 
-    
     return () => {
       subscription.unsubscribe();
       responseListener.remove();
     };
   }, [registerDeviceToken, router]);
 
-  
   useEffect(() => {
     if (!isInitialized) return;
 
-    
     const routeSegments = segments as string[];
     const rootSegment = routeSegments[0];
-
-    
     const inAuthGroup = rootSegment === "(auth)";
     const isIndexScreen = routeSegments.length === 0 || rootSegment === "index";
 
-    
     if (session && (inAuthGroup || isIndexScreen)) {
-      router.replace("/(tabs)" as Href);
+      router.replace("/(drawer)/(tabs)" as Href);
     }
   }, [session, isInitialized, segments, router]);
 
@@ -79,19 +72,17 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: COLORS.background },
-
           animation: "fade",
         }}
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(drawer)" />
         <Stack.Screen
           name="dossier"
           options={{ presentation: "modal", headerShown: false }}
         />
-        <Stack.Screen name="command-center" />
       </Stack>
     </>
   );

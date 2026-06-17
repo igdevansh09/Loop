@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-  Linking,
-  ActivityIndicator,
-  Share,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "../constants/theme";
+import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Linking,
+  Platform,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { COLORS } from "../constants/theme";
 import { supabase } from "../lib/supabase";
 
-import { useAuthStore } from "../store/useAuthStore";
 import { useArenaStore } from "../store/useArenaStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -233,7 +233,6 @@ export default function DossierScreen() {
           <Text style={styles.backText}>ARENA</Text>
         </TouchableOpacity>
 
-        {/* 🚀 ADDED: Active Share Action in Navbar */}
         <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
           <Text style={styles.navTitle}>SHARE_INTEL</Text>
           <Ionicons name="share-outline" size={16} color={COLORS.primary} />

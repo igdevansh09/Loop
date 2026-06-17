@@ -13,11 +13,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
-import { COLORS } from "../constants/theme";
-import { useAuthStore } from "../store/useAuthStore";
-import { useLedgerStore } from "../store/useLedgerStore";
-import { useAlertStore } from "../store/useAlertStore"; // 🚀 IMPORTED GLOBAL ALERT STORE
+import { COLORS } from "../../constants/theme";
+import { useAuthStore } from "../../store/useAuthStore";
+import { useLedgerStore } from "../../store/useLedgerStore";
+import { useAlertStore } from "../../store/useAlertStore";
 
 interface MissionTeam {
   id: string;
@@ -41,7 +40,6 @@ const CornerBrackets = ({ color = COLORS.primary }) => (
 );
 
 export default function CommandCenterScreen() {
-  const router = useRouter();
   const { user } = useAuthStore();
   const {
     myTeams,
@@ -51,7 +49,6 @@ export default function CommandCenterScreen() {
     isLoading,
   } = useLedgerStore();
 
-  // 🚀 EXTRACT ALERT METHODS FROM GLOBAL STORE
   const { showAlert, showConfirm } = useAlertStore();
 
   const [localCapacities, setLocalCapacities] = useState<LocalCapacities>({});
@@ -68,7 +65,6 @@ export default function CommandCenterScreen() {
 
     if (isNaN(newCap) || newCap < 1) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      // 🚀 REPLACED NATIVE ALERT WITH CUSTOM ERROR
       showAlert(
         "DATA_ERROR",
         "Target capacity must be a positive integer.",
@@ -77,7 +73,6 @@ export default function CommandCenterScreen() {
       return;
     }
 
-    // 🚀 REPLACED NATIVE ALERT WITH CUSTOM CONFIRMATION
     showConfirm(
       "CONFIRM_CAPACITY_SHIFT",
       `Adjust ${currentName.toUpperCase()} capacity to ${newCap} units?`,
@@ -94,7 +89,6 @@ export default function CommandCenterScreen() {
   const handleKill = (teamId: string, name: string) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
 
-    // 🚀 REPLACED NATIVE DESTRUCTIVE ALERT WITH CUSTOM CONFIRMATION
     showConfirm(
       "TERMINATE MISSION",
       `CRITICAL: Terminating ${name.toUpperCase()} will reject all pending applicants and remove the signal from the Arena permanently.`,
@@ -112,17 +106,17 @@ export default function CommandCenterScreen() {
       <LinearGradient
         colors={[`${COLORS.primary}15`, "transparent"]}
         style={StyleSheet.absoluteFillObject}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 0.4 }}
       />
 
-      <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={18} color={COLORS.primary} />
-          <Text style={styles.backText}>BACK_TO_DOSSIER</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.kicker}>COMMAND_CENTER // STATUS_ACTIVE</Text>
+      <Animated.View
+        entering={FadeInDown.delay(100).springify()}
+        style={styles.headerContainer}
+      >
+        <Text style={styles.kicker}>COMMAND_CENTER </Text>
         <Text style={styles.header}>MISSIONS</Text>
-      </View>
+      </Animated.View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -268,7 +262,13 @@ export default function CommandCenterScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  headerContainer: { paddingTop: 60, paddingHorizontal: 16, marginBottom: 20 },
+  headerContainer: {
+    paddingTop: 60,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   backBtn: { flexDirection: "row", alignItems: "center", marginBottom: 15 },
   backText: {
     color: COLORS.primary,

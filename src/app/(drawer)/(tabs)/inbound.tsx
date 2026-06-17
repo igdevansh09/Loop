@@ -1,24 +1,38 @@
-import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  Platform,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { COLORS } from "../../constants/theme";
-import { useAuthStore } from "../../store/useAuthStore";
-import { useLedgerStore } from "../../store/useLedgerStore";
-import { OutboundCard } from "../../components/OutboundCard";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
+import {
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { ApplicantModal } from "../../../components/ApplicantModal";
+import { InboundCard } from "../../../components/InboundCard";
+import { COLORS } from "../../../constants/theme";
+import { useAuthStore } from "../../../store/useAuthStore";
+import { useLedgerStore } from "../../../store/useLedgerStore";
 
-export default function OutboundScreen() {
+interface IntelPayload {
+  id: string;
+  profiles: {
+    github_handle: string;
+    training_ground: string;
+    ai_assessment: string;
+  };
+  teams: {
+    project_name: string;
+  };
+}
+
+export default function InboundScreen() {
   const { user } = useAuthStore();
+  const [selectedIntel, setSelectedIntel] = useState<IntelPayload | null>(null);
   const {
-    outbound,
+    inbound,
     isLoading,
     fetchLedger,
     updateRequest,
@@ -29,10 +43,9 @@ export default function OutboundScreen() {
   useEffect(() => {
     if (user) {
       fetchLedger(user.id);
-      subscribeToLedger(user.id); // 🚀 TURN ON REAL-TIME RADAR
+      subscribeToLedger(user.id);
     }
 
-    // Cleanup when component unmounts
     return () => {
       unsubscribeFromLedger();
     };
@@ -43,21 +56,26 @@ export default function OutboundScreen() {
     if (user) fetchLedger(user.id);
   };
 
+  const validInbound = inbound.filter(
+    (item) => item && item.profiles && item.teams,
+  );
+
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[`${COLORS.primary}10`, "transparent"]}
+        colors={[`${COLORS.primary}15`, "transparent"]}
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 0.4 }}
       />
 
-      <View style={styles.headerContainer}>
-        <Animated.View entering={FadeInDown.delay(100).springify()}>
-          <Text style={styles.kicker}>PROTOCOL // OUT</Text>
-          <Text style={styles.headerTitle}>OUTBOUND</Text>
-        </Animated.View>
-      </View>
+      <Animated.View
+        entering={FadeInDown.delay(100).springify()}
+        style={styles.headerContainer}
+      >
+        <Text style={styles.kicker}>PROTOCOL // IN</Text>
+        <Text style={styles.headerTitle}>INBOUND</Text>
+      </Animated.View>
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -70,13 +88,17 @@ export default function OutboundScreen() {
           />
         }
       >
-        {outbound.length > 0 ? (
-          outbound.map((item, index) => (
+        {validInbound.length > 0 ? (
+          validInbound.map((item, index) => (
             <Animated.View
               key={item.id}
               entering={FadeInDown.delay(index * 100)}
             >
-              <OutboundCard item={item} onAction={updateRequest} />
+              <InboundCard
+                item={item}
+                onAction={updateRequest}
+                onOpenModal={() => setSelectedIntel(item)}
+              />
             </Animated.View>
           ))
         ) : (
@@ -84,26 +106,29 @@ export default function OutboundScreen() {
             entering={FadeInDown.delay(200)}
             style={styles.emptyState}
           >
-            <Text style={styles.emptyText}>NO OUTBOUND TRANSMISSIONS</Text>
+            <Text style={styles.emptyText}>NO INCOMING SIGNALS DETECTED</Text>
           </Animated.View>
         )}
       </ScrollView>
+
+      <ApplicantModal
+        visible={!!selectedIntel}
+        applicant={selectedIntel}
+        onClose={() => setSelectedIntel(null)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-
-  
+  container: { flex: 1, backgroundColor: COLORS.background },
   headerContainer: {
     paddingTop: 60,
     paddingHorizontal: 16,
     marginBottom: 10,
     zIndex: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   kicker: {
     color: COLORS.primary,
@@ -119,19 +144,8 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     textTransform: "uppercase",
   },
-
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 100,
-  },
-
-  
-  emptyState: {
-    marginTop: 60,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 100 },
+  emptyState: { marginTop: 60, alignItems: "center", justifyContent: "center" },
   emptyText: {
     color: "rgba(255, 255, 255, 0.2)",
     fontSize: 12,

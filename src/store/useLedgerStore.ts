@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
-import { Alert } from "react-native";
 import { useAlertStore } from "./useAlertStore";
 
 interface LedgerState {
@@ -17,8 +16,6 @@ interface LedgerState {
   triggerKillswitch: (teamId: string) => Promise<void>;
   updateCapacity: (teamId: string, newCapacity: number) => Promise<void>;
   fetchMyTeams: (userId: string) => Promise<void>;
-
-  // 🚀 REAL-TIME PROTOCOLS ADDED
   subscribeToLedger: (userId: string) => void;
   unsubscribeFromLedger: () => void;
 }
@@ -72,8 +69,6 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
   },
 
   updateRequest: async (requestId, status) => {
-    // 🚀 PROBLEM #3 FIX: OPTIMISTIC UI UPDATES
-    // Remove the card from the screen INSTANTLY before talking to the database
     const prevOutbound = get().outbound;
     const prevInbound = get().inbound;
 
@@ -86,7 +81,6 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
     try {
       let err = null;
 
-      // 🚀 FIXED: We now EXPLICITLY check for database errors
       if (status === "withdrawn") {
         const { error } = await supabase
           .from("swipes")
@@ -101,11 +95,10 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
         err = error;
       }
 
-      if (err) throw err; // Throw it so the catch block handles it
+      if (err) throw err; 
     } catch (err: any) {
       console.error("Update Action Failed:", err.message);
 
-      // ROLLBACK: If database failed (e.g., RLS blocked it), put the cards back on screen
       set({ outbound: prevOutbound, inbound: prevInbound });
 
       useAlertStore
@@ -193,11 +186,8 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
     if (!error) set({ myTeams: data || [] });
   },
 
-  // =========================================================
-  // 🚀 PROBLEM #5 FIX: REAL-TIME RADAR PROTOCOLS
-  // =========================================================
   subscribeToLedger: (userId: string) => {
-    if (realtimeChannel) return; // Ignore if already listening
+    if (realtimeChannel) return; 
 
     console.log("UPLINK: Establishing Real-time Ledger Connection...");
 
@@ -208,7 +198,6 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
         { event: "*", schema: "public", table: "swipes" },
         (payload) => {
           console.log("REALTIME SIGNAL DETECTED:", payload.eventType);
-          // Silently sync the latest data in the background
           get().fetchLedger(userId);
         },
       )

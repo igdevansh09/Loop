@@ -9,7 +9,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../constants/theme";
 import * as Haptics from "expo-haptics";
-import { useAlertStore } from "../store/useAlertStore"; // Global Store Hook
+import { useAlertStore } from "../store/useAlertStore"; 
 
 const CornerBrackets = ({ color = COLORS.primary }) => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -35,7 +35,6 @@ interface OutboundCardProps {
 }
 
 export const OutboundCard = ({ item, onAction }: OutboundCardProps) => {
-  // 🚀 FIXED: Calling the store as a strict React Hook
   const showAlert = useAlertStore((state) => state.showAlert);
 
   const isAccepted = item.status === "accepted";
@@ -54,7 +53,6 @@ export const OutboundCard = ({ item, onAction }: OutboundCardProps) => {
 
   const joinMission = () => {
     if (!item.teams.private_community_url) {
-      // 🚀 FIXED: Using the properly extracted hook function
       showAlert(
         "ENCRYPTION ERROR",
         "Comms link not found in data packet.",

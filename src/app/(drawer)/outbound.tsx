@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -13,26 +13,12 @@ import * as Haptics from "expo-haptics";
 import { COLORS } from "../../constants/theme";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useLedgerStore } from "../../store/useLedgerStore";
-import { InboundCard } from "../../components/InboundCard";
-import { ApplicantModal } from "../../components/ApplicantModal";
+import { OutboundCard } from "../../components/OutboundCard";
 
-interface IntelPayload {
-  id: string;
-  profiles: {
-    github_handle: string;
-    training_ground: string;
-    ai_assessment: string;
-  };
-  teams: {
-    project_name: string;
-  };
-}
-
-export default function InboundScreen() {
+export default function OutboundScreen() {
   const { user } = useAuthStore();
-  const [selectedIntel, setSelectedIntel] = useState<IntelPayload | null>(null);
   const {
-    inbound,
+    outbound,
     isLoading,
     fetchLedger,
     updateRequest,
@@ -43,10 +29,9 @@ export default function InboundScreen() {
   useEffect(() => {
     if (user) {
       fetchLedger(user.id);
-      subscribeToLedger(user.id); // 🚀 TURN ON REAL-TIME RADAR
+      subscribeToLedger(user.id);
     }
 
-    // Cleanup when component unmounts
     return () => {
       unsubscribeFromLedger();
     };
@@ -57,27 +42,22 @@ export default function InboundScreen() {
     if (user) fetchLedger(user.id);
   };
 
-  // 🚀 THE BLAST SHIELD: Pre-filter the array to purge any malformed or ghost data
-  // This guarantees the app will NEVER crash trying to read missing properties.
-  const validInbound = inbound.filter(
-    (item) => item && item.profiles && item.teams,
-  );
-
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[`${COLORS.primary}10`, "transparent"]}
+        colors={[`${COLORS.primary}15`, "transparent"]}
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 0.4 }}
       />
 
-      <View style={styles.headerContainer}>
-        <Animated.View entering={FadeInDown.delay(100).springify()}>
-          <Text style={styles.kicker}>PROTOCOL // IN</Text>
-          <Text style={styles.headerTitle}>INBOUND</Text>
-        </Animated.View>
-      </View>
+      <Animated.View
+        entering={FadeInDown.delay(100).springify()}
+        style={styles.headerContainer}
+      >
+        <Text style={styles.kicker}>PROTOCOL // OUT</Text>
+        <Text style={styles.headerTitle}>OUTBOUND</Text>
+      </Animated.View>
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -90,17 +70,13 @@ export default function InboundScreen() {
           />
         }
       >
-        {validInbound.length > 0 ? (
-          validInbound.map((item, index) => (
+        {outbound.length > 0 ? (
+          outbound.map((item, index) => (
             <Animated.View
               key={item.id}
               entering={FadeInDown.delay(index * 100)}
             >
-              <InboundCard
-                item={item}
-                onAction={updateRequest}
-                onOpenModal={() => setSelectedIntel(item)}
-              />
+              <OutboundCard item={item} onAction={updateRequest} />
             </Animated.View>
           ))
         ) : (
@@ -108,27 +84,27 @@ export default function InboundScreen() {
             entering={FadeInDown.delay(200)}
             style={styles.emptyState}
           >
-            <Text style={styles.emptyText}>NO INCOMING SIGNALS DETECTED</Text>
+            <Text style={styles.emptyText}>NO OUTBOUND TRANSMISSIONS</Text>
           </Animated.View>
         )}
       </ScrollView>
-
-      <ApplicantModal
-        visible={!!selectedIntel}
-        applicant={selectedIntel}
-        onClose={() => setSelectedIntel(null)}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+
   headerContainer: {
     paddingTop: 60,
     paddingHorizontal: 16,
     marginBottom: 10,
     zIndex: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   kicker: {
     color: COLORS.primary,
@@ -144,8 +120,18 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     textTransform: "uppercase",
   },
-  content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 100 },
-  emptyState: { marginTop: 60, alignItems: "center", justifyContent: "center" },
+
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 100,
+  },
+
+  emptyState: {
+    marginTop: 60,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   emptyText: {
     color: "rgba(255, 255, 255, 0.2)",
     fontSize: 12,
