@@ -1,8 +1,9 @@
 <div align="center">
   <img src="./assets/images/icon.png" alt="Loop Logo" width="120" height="120"/>
 
-  # Loop 🔄
-  ### AI-Powered Hackathon MatchMaking Platform
+# Loop 🔄
+
+### AI-Powered Hackathon MatchMaking Platform
 
   <p><b>Discover. Analyze. Connect.</b></p>
 
@@ -22,6 +23,7 @@
 **Loop** is a high-performance mobile application designed to rethink how users discover and connect with opportunities.
 
 Built using **React Native (Expo)** with a **Supabase backend**, it combines:
+
 - Gesture-based discovery (swipe interface)
 - Real-time data sync
 - Serverless AI-driven profile generation
@@ -32,19 +34,21 @@ This is not just a UI project — it demonstrates **scalable architecture, real-
 
 ## 🚀 Demo
 
-- 📱 APK: https://github.com/igdevansh09/Loop/releases/download/apps/Loop.apk  
-- 🎥 Demo Video: https://youtube.com/shorts/17AIQpRHrjc?si=t6pLO01wU0ib4SO1  
+- 📱 APK: https://github.com/igdevansh09/Loop/releases/download/apps/Loop.apk
+- 🎥 Demo Video: https://youtube.com/shorts/17AIQpRHrjc?si=t6pLO01wU0ib4SO1
 
 ---
 
 ## ✨ Technical Highlights
 
 ### ⚡ Edge Functions
-- `analyze-signal` → processes user interactions  
-- `generate-profile` → builds AI-enhanced profiles  
+
+- `analyze-signal` → processes user interactions
+- `generate-profile` → builds AI-enhanced profiles
 - Runs on Supabase Edge (Deno)
 
 ### 🧠 State Management
+
 - Zustand modular stores:
   - `useAuthStore`
   - `useArenaStore`
@@ -52,21 +56,24 @@ This is not just a UI project — it demonstrates **scalable architecture, real-
   - `useLaunchStore`
 
 ### 🎯 UI/UX
-- Tinder-style swipe system  
-- Built with Reanimated + Gesture Handler  
-- Smooth, native performance  
+
+- Tinder-style swipe system
+- Built with Reanimated + Gesture Handler
+- Smooth, native performance
 
 ### 🔄 Real-Time
+
 - Supabase subscriptions for:
-  - Inbound requests  
-  - Outbound actions  
-  - Notifications  
+  - Inbound requests
+  - Outbound actions
+  - Notifications
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - React Native (Expo)
 - Expo Router
 - TypeScript
@@ -74,6 +81,7 @@ This is not just a UI project — it demonstrates **scalable architecture, real-
 - Reanimated + Gesture Handler
 
 ### Backend
+
 - Supabase (PostgreSQL + RLS)
 - Supabase Auth
 - Edge Functions (Deno)
@@ -84,22 +92,26 @@ This is not just a UI project — it demonstrates **scalable architecture, real-
 ## 📱 Core Features
 
 ### 🏟 Arena
-- Swipe-based discovery  
-- Adaptive matching via interaction signals  
+
+- Swipe-based discovery
+- Adaptive matching via interaction signals
 
 ### 📥📤 Ledger
-- Track inbound & outbound connections  
-- Detailed profile analytics (Dossier view)  
+
+- Track inbound & outbound connections
+- Detailed profile analytics (Dossier view)
 
 ### ⚙️ Command Center
-- AI-generated profiles  
-- Account & system control  
+
+- AI-generated profiles
+- Account & system control
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js (v18+)
 - npm / yarn
 - Expo CLI
@@ -157,20 +169,25 @@ npx expo start
 
 Scan the QR code with the Expo Go app on your physical device, or press `a` to run on an Android emulator / `i` for iOS simulator.
 
-* * * * *
+---
 
-🗂️ Project Structure
----------------------
+## 🗂️ Project Structure
 
 Plaintext
 
 ```
 loop/
 ├── src/
-│   ├── app/                  # Expo Router navigation
 │   │   ├── (auth)/           # Authentication screens
-│   │   ├── (tabs)/           # Main tab navigation (Arena, Inbound, Profile)
-│   │   └── command-center.tsx# Standalone screens
+│   ���── app/              # Expo Router navigation
+│   │   ├── (drawer)/         # Sidebar & main application shell
+│   │   │   ├── (tabs)/       # Tabbed navigation (Arena, Inbound, Profile)
+│   │   │   └── command-center.tsx # Mission & capacity management
+│   │   │   └── outbound.tsx  # For outbound requests
+│   │   │   └── create.tsx    # For project creation
+│   │   ├── dossier.tsx       # Detailed profile view (Modal)
+│   │   ├── onboarding.tsx    # User initialization flow
+│   │   └── index.tsx         # App entry point
 │   ├── components/           # Reusable UI (SwiperCard, InboundCard, Dossier)
 │   ├── constants/            # Theming and app constants
 │   ├── lib/                  # Core libraries (Supabase client init)
@@ -184,7 +201,7 @@ loop/
 
 ```
 
-* * * * *
+---
 
 <div align="center">
 

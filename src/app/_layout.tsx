@@ -7,6 +7,8 @@ import { COLORS } from "../constants/theme";
 import { useAuthStore } from "../store/useAuthStore";
 import { supabase } from "../lib/supabase";
 import { CustomAlert } from "../components/CustomAlert";
+import { useNetworkStore } from "../store/useNetworkStore";
+import { NetworkBanner } from "../components/NetworkBanner";
 
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => ({
@@ -22,6 +24,16 @@ export default function RootLayout() {
   const segments = useSegments();
 
   const { registerDeviceToken, session, isInitialized } = useAuthStore();
+  const initNetworkListener = useNetworkStore(
+    (state) => state.initNetworkListener,
+  );
+
+  useEffect(() => {
+    const unsubscribeNetwork = initNetworkListener();
+    return () => {
+      if (unsubscribeNetwork) unsubscribeNetwork();
+    };
+  }, [initNetworkListener]);
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(COLORS.background);
@@ -68,6 +80,7 @@ export default function RootLayout() {
     <>
       <StatusBar style="light" />
       <CustomAlert />
+      <NetworkBanner />
       <Stack
         screenOptions={{
           headerShown: false,
