@@ -113,6 +113,7 @@ export default function ProfileScreen() {
     profile,
     githubStats,
     burnTrainingGround,
+    updateSystemCapacity, 
     generateAiProfile,
     signOut,
     deleteAccount,
@@ -122,6 +123,8 @@ export default function ProfileScreen() {
   const { showAlert, showConfirm } = useAlertStore();
   const { userApiKey, saveKey, loadKey } = useKeyStore();
   const [collegeInput, setCollegeInput] = useState("");
+  const [capacityInput, setCapacityInput] = useState("");
+  const [isUpdatingCap, setIsUpdatingCap] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [isBurning, setIsBurning] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -171,6 +174,30 @@ export default function ProfileScreen() {
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       showAlert("SYSTEM FAILURE", "Failed to write to database.", "error");
+    }
+  };
+
+  const handleUpdateCapacity = async () => {
+    const hours = parseInt(capacityInput);
+    if (isNaN(hours) || hours < 1 || hours > 24) {
+      showAlert(
+        "INVALID DATA",
+        "Capacity must be between 1 and 24 hours.",
+        "error",
+      );
+      return;
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setIsUpdatingCap(true);
+    const success = await updateSystemCapacity(hours);
+    setIsUpdatingCap(false);
+
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCapacityInput("");
+    } else {
+      showAlert("SYSTEM FAILURE", "Could not update capacity.", "error");
     }
   };
 
@@ -302,7 +329,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <ProfileInfoBanner />
-        
+
         {isGeneratingProfile ? (
           <Animated.View
             entering={FadeInDown.springify()}
@@ -478,21 +505,35 @@ export default function ProfileScreen() {
           )}
 
           <Text style={[styles.inputLabel, { marginTop: 20 }]}>
-            SYSTEM CAPACITY
+            SYSTEM CAPACITY (HOURS/DAY)
           </Text>
-          <View
-            style={[
-              styles.lockedBox,
-              {
-                borderColor: "rgba(255,255,255,0.1)",
-                backgroundColor: "rgba(0,0,0,0.6)",
-              },
-            ]}
-          >
-            <Ionicons name="time" size={16} color={COLORS.grey} />
-            <Text style={[styles.lockedText, { color: COLORS.grey }]}>
-              {currentProfile?.available_hours_per_day || "0"} HOURS / DAY
-            </Text>
+          <View style={styles.burnRow}>
+            <TextInput
+              style={styles.burnInput}
+              placeholder={
+                currentProfile?.available_hours_per_day?.toString() || "4"
+              }
+              placeholderTextColor="rgba(255, 255, 255, 0.3)"
+              keyboardType="numeric"
+              value={capacityInput}
+              onChangeText={setCapacityInput}
+              maxLength={2}
+            />
+            <TouchableOpacity
+              style={[styles.burnButton, { backgroundColor: COLORS.primary }]}
+              onPress={handleUpdateCapacity}
+              disabled={isUpdatingCap}
+            >
+              {isUpdatingCap ? (
+                <ActivityIndicator color={COLORS.background} />
+              ) : (
+                <Ionicons
+                  name="hardware-chip"
+                  size={20}
+                  color={COLORS.background}
+                />
+              )}
+            </TouchableOpacity>
           </View>
         </Animated.View>
 

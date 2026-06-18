@@ -16,7 +16,6 @@ serve(async (req) => {
   try {
     const payload = await req.json();
 
-    // We expect this to be called by a Supabase Webhook on the 'teams' table
     const record = payload.record;
 
     if (!record || !record.id) {
@@ -30,8 +29,6 @@ serve(async (req) => {
 
     const genAI = new GoogleGenerativeAI(geminiKey);
 
-    // 1. Construct the Semantic Text Payload
-    // Hum sirf tags nahi, pura context embed karenge.
     const textToEmbed = `
       Project Name: ${record.project_name}
       Description: ${record.project_description}
@@ -40,16 +37,13 @@ serve(async (req) => {
 
     console.log("[ANALYZE-SIGNAL] Generating Vector Embedding...");
 
-    // 2. Call Gemini Embedding Model
     const embeddingModel = genAI.getGenerativeModel({
       model: "gemini-embedding-001",
     });
     const embeddingResult = await embeddingModel.embedContent(textToEmbed);
 
-    // Gemini returns a 768-dimensional float array
     const requirementVector = embeddingResult.embedding.values.slice(0, 768);
 
-    // 3. Inject Vector back into the Database
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);

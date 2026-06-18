@@ -91,6 +91,7 @@ interface AuthState {
   fetchProfile: (userId: string, retryCount?: number) => Promise<void>;
   burnTrainingGround: (collegeName: string) => Promise<boolean>;
   generateAiProfile: () => Promise<boolean>;
+  updateSystemCapacity: (hours: number) => Promise<boolean>; 
   githubStats: GithubStats | null;
   deleteAccount: () => Promise<boolean>;
   registerDeviceToken: () => Promise<void>;
@@ -350,6 +351,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return true;
     } catch (err: any) {
       console.error("Failed to burn training ground:", err);
+      return false;
+    }
+  },
+
+  updateSystemCapacity: async (hours: number) => {
+    const { user } = get();
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ available_hours_per_day: hours })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      set((state) => ({
+        profile: state.profile
+          ? { ...state.profile, available_hours_per_day: hours }
+          : null,
+      }));
+
+      return true;
+    } catch (err: any) {
+      console.error("Failed to update capacity:", err);
       return false;
     }
   },

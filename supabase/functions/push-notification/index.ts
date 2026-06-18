@@ -66,7 +66,6 @@ serve(async (req) => {
     let targetRoute = "";
     let tokens: string[] = [];
 
-    // PROTOCOL 1: NEW TEAM LAUNCHED (BROADCAST)
     if (table === "teams" && type === "INSERT") {
       pushTitle = "NEW MISSION AVAILABLE //";
       pushBody = `A new project '${record.project_name.toUpperCase()}' was just launched in the Arena.`;
@@ -86,7 +85,6 @@ serve(async (req) => {
       }
     }
 
-    // PROTOCOL 2: SWIPE INTERACTIONS
     else if (table === "swipes") {
       let targetUserId = null;
 
@@ -143,7 +141,6 @@ serve(async (req) => {
       }
     }
 
-    // EXECUTE TRANSMISSION (FCM V1 API)
     if (tokens.length === 0) {
       return new Response("Target(s) have no push tokens", { status: 200 });
     }
