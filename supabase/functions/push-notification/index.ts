@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { create, getNumericDate } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
 
-// Helper function to generate OAuth2 Access Token using the Service Account JSON
 async function getAccessToken(serviceAccountJsonStr: string) {
   const serviceAccount = JSON.parse(serviceAccountJsonStr);
 
@@ -11,11 +10,10 @@ async function getAccessToken(serviceAccountJsonStr: string) {
     iss: serviceAccount.client_email,
     scope: "https://www.googleapis.com/auth/firebase.messaging",
     aud: "https://oauth2.googleapis.com/token",
-    exp: getNumericDate(3600), // Token expires in 1 hour
+    exp: getNumericDate(3600), 
     iat: getNumericDate(0),
   };
 
-  // The private key might have escaped newlines, we need to unescape them
   const privateKeyPem = serviceAccount.private_key.replace(/\\n/g, "\n");
 
   const keyData = privateKeyPem
@@ -68,9 +66,7 @@ serve(async (req) => {
     let targetRoute = "";
     let tokens: string[] = [];
 
-    // ==========================================
     // PROTOCOL 1: NEW TEAM LAUNCHED (BROADCAST)
-    // ==========================================
     if (table === "teams" && type === "INSERT") {
       pushTitle = "NEW MISSION AVAILABLE //";
       pushBody = `A new project '${record.project_name.toUpperCase()}' was just launched in the Arena.`;
@@ -90,9 +86,7 @@ serve(async (req) => {
       }
     }
 
-    // ==========================================
     // PROTOCOL 2: SWIPE INTERACTIONS
-    // ==========================================
     else if (table === "swipes") {
       let targetUserId = null;
 
@@ -112,7 +106,7 @@ serve(async (req) => {
         targetUserId = team?.founder_id;
         pushTitle = "INBOUND SIGNAL //";
         pushBody = `@${profile?.github_handle || "Unknown"} applied to join ${team?.project_name?.toUpperCase()}.`;
-        targetRoute = "inbound";
+        targetRoute = "/(drawer)/(tabs)/inbound";
       } else if (type === "UPDATE" && record.status !== old_record?.status) {
         const { data: team } = await supabase
           .from("teams")
@@ -121,7 +115,7 @@ serve(async (req) => {
           .single();
 
         targetUserId = record.swiper_id;
-        targetRoute = "outbound";
+        targetRoute = "/(drawer)/outbound";
 
         if (record.status === "accepted") {
           pushTitle = "UPLINK SECURED //";
@@ -149,9 +143,7 @@ serve(async (req) => {
       }
     }
 
-    // ==========================================
     // EXECUTE TRANSMISSION (FCM V1 API)
-    // ==========================================
     if (tokens.length === 0) {
       return new Response("Target(s) have no push tokens", { status: 200 });
     }
@@ -164,7 +156,6 @@ serve(async (req) => {
     const projectId = JSON.parse(serviceAccountJson).project_id;
     const accessToken = await getAccessToken(serviceAccountJson);
 
-    // FCM V1 requires sending messages individually, so we use Promise.all
     const fcmRequests = tokens.map((token) => {
       const fcmMessage = {
         message: {

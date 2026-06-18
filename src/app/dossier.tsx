@@ -153,13 +153,25 @@ export default function DossierScreen() {
   };
 
   const handleApply = async () => {
-    if (!user || !params.id) return;
+    if (!params.id) return;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const activeUserId = session?.user?.id || user?.id;
+
+    if (!activeUserId) {
+      console.warn(
+        "Application failed: Identity could not be verified in time.",
+      );
+      return;
+    }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setIsTransmitting(true);
 
     try {
-      await processSwipe(user.id, params.id, "right");
+      await processSwipe(activeUserId, params.id, "right");
       removeTeamFromDeck(params.id);
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
