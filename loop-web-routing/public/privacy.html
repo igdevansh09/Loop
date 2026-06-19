@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loop // Privacy Policy</title>
+  <style>
+    :root {
+      --primary: #EAB308;
+      --secondary: #CA8A04;
+      --background: #000000;
+      --surface: #111111;
+      --surface-light: #494646;
+      --white: #FAFAFA;
+      --grey: #9CA3AF;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--background);
+      background-image: linear-gradient(180deg, rgba(234, 179, 8, 0.05) 0%, var(--background) 20%);
+      color: var(--grey);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 40px 24px;
+      box-sizing: border-box;
+    }
+
+    .hud-box {
+      max-width: 800px;
+      width: 100%;
+      background-color: rgba(17, 17, 17, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      text-align: left;
+    }
+
+    .hud-box::before, .hud-box::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-color: var(--primary);
+      border-style: solid;
+      pointer-events: none;
+    }
+    
+    .hud-box::before {
+      top: -1px; left: -1px;
+      border-width: 2px 0 0 2px;
+    }
+    
+    .hud-box::after {
+      bottom: -1px; right: -1px;
+      border-width: 0 2px 2px 0;
+    }
+
+    .kicker {
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .header {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+      margin: 0 0 20px 0;
+      line-height: 1.1;
+      color: var(--white);
+    }
+
+    .scan-line {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      margin-bottom: 30px;
+      opacity: 0.6;
+    }
+
+    h2 {
+      color: var(--white);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-top: 35px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      border-left: 2px solid var(--primary);
+      padding-left: 10px;
+    }
+
+    p, li {
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 15px;
+    }
+
+    ul {
+      margin-bottom: 20px;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    strong {
+      color: var(--white);
+    }
+
+    .mono {
+      font-family: ui-monospace, Menlo, Monaco, "Courier New", monospace;
+      font-size: 12px;
+      background: rgba(255,255,255,0.05);
+      padding: 2px 6px;
+      border-radius: 2px;
+      color: var(--primary);
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="hud-box">
+    <div class="kicker">LEGAL // COMPLIANCE</div>
+    <h1 class="header">PRIVACY POLICY</h1>
+    <div class="scan-line"></div>
+
+    <p><strong>Effective Date:</strong> 19-06-2026</p>
+
+    <p>This Privacy Policy explains how Loop ("we," "us," or "our") collects, uses, discloses, and safeguards your information when you use our mobile application and associated services. By authenticating and utilizing the Loop network, you explicitly consent to the data practices described in this document.</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>To provide accurate technical matchmaking and automated assessments, we collect specific categories of data:</p>
+    <ul>
+      <li><strong>Authentication & Identity Data:</strong> We utilize <span class="mono">GitHub OAuth</span> to verify identity. We collect your GitHub handle, public avatar URL, and a secure access token.</li>
+      <li><strong>Technical Telemetry (GitHub Data):</strong> We pull data from your public GitHub profile, including repository count, total stars, primary programming languages, and commit history to evaluate your technical stack (e.g., assessing proficiency in Data Structures and Algorithms).</li>
+      <li><strong>User-Provided Constraints:</strong> Information you explicitly provide to the system, including your training ground (college/university), available working hours per day, gender (for specific team requirements), and hackathon project details.</li>
+      <li><strong>Behavioral Data:</strong> We log your interactions within the Arena, specifically your right/left swipe decisions (applications and rejections) to manage the matchmaking ledger.</li>
+      <li><strong>Device Information:</strong> We collect Push Notification tokens via Expo and Firebase Cloud Messaging (FCM) to deliver real-time operational alerts to your specific device.</li>
+    </ul>
+
+    <h2>2. How We Use Your Information</h2>
+    <p>Your data is strictly utilized to operate and secure the Loop network:</p>
+    <ul>
+      <li><strong>AI Assessment Generation:</strong> To analyze your public code and generate a summary of your primary tech stack, assessment, and weekend build history.</li>
+      <li><strong>Vector Matchmaking:</strong> To convert your technical profile and project requirements into 768-dimensional mathematical vectors. These embeddings are used to calculate precise compatibility scores between developers and mission requirements.</li>
+      <li><strong>Communication:</strong> To notify you of inbound squad requests, application approvals, and mission terminations.</li>
+      <li><strong>Network Integrity:</strong> To enforce capacity limits on teams and filter out invalid or "ghost" profiles lacking demonstrable technical history.</li>
+    </ul>
+
+    <h2>3. Third-Party Data Processing</h2>
+    <p>Loop relies on a heavily integrated, secure third-party infrastructure stack. Your data is transmitted to and processed by the following entities:</p>
+    <ul>
+      <li><strong>Supabase:</strong> Acts as our primary backend infrastructure. Your profile data, project details, swipe history, and relational vectors (via <span class="mono">pgvector</span>) are stored securely in Supabase PostgreSQL databases. Supabase also handles the underlying GitHub OAuth state.</li>
+      <li><strong>Google Gemini AI:</strong> Your public GitHub data and user-provided project descriptions are transmitted to Google Gemini API models. This service is responsible for generating the natural language technical assessments and the mathematical vector embeddings required for the matchmaking algorithm.</li>
+      <li><strong>Google Play Services / Firebase:</strong> Utilized exclusively for routing and delivering secure push notifications to your device hardware.</li>
+    </ul>
+
+    <h2>4. Data Retention and Deletion (Burn Protocol)</h2>
+    <p>You retain absolute control over your digital footprint within Loop. You may terminate your session and permanently expunge your data at any time via the <strong>"Delete Account"</strong> function located in your profile settings.</p>
+    <p>Initiating this protocol triggers a complete database wipe of your identity. It permanently deletes your user profile, technical assessments, vector embeddings, active project postings, and swipe history from our Supabase servers. Push notification tokens are actively destroyed upon standard logout or account deletion to prevent phantom transmissions.</p>
+
+    <h2>5. Security Protocols</h2>
+    <p>We employ strict security measures to protect your telemetry. All network traffic is encrypted over HTTPS. Database interactions are protected by stringent Row Level Security (RLS) policies within Supabase, ensuring that users can only access or modify data authorized for their specific clearance level (e.g., founders modifying their own teams, users viewing matched profiles).</p>
+
+    <h2>6. Children's Privacy</h2>
+    <p>The Loop network is designed strictly for adult developers and university students. We do not knowingly collect personally identifiable information from anyone under the age of 13 (or 16 in certain jurisdictions). If you are a parent or guardian and believe your child has provided us with personal data, please contact us immediately so we can execute a data purge.</p>
+
+    <h2>7. Changes to this Privacy Policy</h2>
+    <p>We may update this Privacy Policy periodically to reflect changes in our backend architecture, third-party integrations, or legal obligations. We will notify you of any significant changes by updating the "Effective Date" at the top of this document and, where appropriate, through an in-app notification.</p>
+
+    <h2>8. Contact Information</h2>
+    <p>For inquiries regarding data privacy, compliance, or to request manual data deletion, please contact the developer directly via the details below:</p>
+    <ul>
+      <li><strong>Developer Name:</strong> Devansh Gupta</li>
+      <li><strong>Developer Handle:</strong> @igdevansh09</li>
+      <li><strong>Contact Address:</strong> devanshgupta09072004@gmail.com</li>
+      <li><strong>Project Repository:</strong> <a href="https://github.com/igdevansh09/loop" target="_blank">LOOP</a></li>
+    </ul>
+
+  </div>
+</body>
+</html>
