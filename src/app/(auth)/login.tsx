@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
+  Linking,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -176,10 +178,16 @@ export default function LoginScreen() {
           <Animated.View
             entering={FadeInDown.delay(800)}
             style={styles.systemFooter}
-            pointerEvents="none"
+            pointerEvents="auto"
           >
-            <Text style={styles.systemText}>CONNECTION // SECURE</Text>
-            <Text style={styles.systemText}>ENCRYPTION // 256-BIT TRUTH</Text>
+            <Pressable
+              onPress={() =>
+                Linking.openURL(`https://loop-5d7e2.web.app/privacy/`)
+              }
+            >
+              <Text style={styles.systemText}>PRIVACY POLICY</Text>
+              <Text style={styles.systemText}>CONNECTION // SECURE</Text>
+            </Pressable>
           </Animated.View>
         </>
       )}
