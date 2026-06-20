@@ -1,4 +1,4 @@
-import "react-native-gesture-handler"
+import "react-native-gesture-handler";
 import { useEffect } from "react";
 import { Stack, useRouter, useSegments, Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -12,7 +12,7 @@ import { useNetworkStore } from "../store/useNetworkStore";
 import { NetworkBanner } from "../components/NetworkBanner";
 
 Notifications.setNotificationHandler({
-  handleNotification: async (notification) => ({
+  handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
     shouldPlaySound: true,
@@ -28,6 +28,8 @@ export default function RootLayout() {
   const initNetworkListener = useNetworkStore(
     (state) => state.initNetworkListener,
   );
+
+  const lastNotificationResponse = Notifications.useLastNotificationResponse();
 
   useEffect(() => {
     const unsubscribeNetwork = initNetworkListener();
@@ -53,7 +55,8 @@ export default function RootLayout() {
           const data = response.notification.request.content.data;
 
           if (data && typeof data.route === "string") {
-            router.push(`/${data.route}` as Href);
+            const cleanRoute = data.route.replace(/^\/+/, "");
+            router.push(`/${cleanRoute}` as Href);
           }
         },
       );
@@ -63,6 +66,23 @@ export default function RootLayout() {
       responseListener.remove();
     };
   }, [registerDeviceToken, router]);
+
+  useEffect(() => {
+    if (
+      isInitialized &&
+      lastNotificationResponse &&
+      lastNotificationResponse.actionIdentifier ===
+        Notifications.DEFAULT_ACTION_IDENTIFIER
+    ) {
+      const data = lastNotificationResponse.notification.request.content.data;
+      if (data && typeof data.route === "string") {
+        const cleanRoute = data.route.replace(/^\/+/, "");
+        setTimeout(() => {
+          router.push(`/${cleanRoute}` as Href);
+        }, 100);
+      }
+    }
+  }, [lastNotificationResponse, isInitialized, router]);
 
   useEffect(() => {
     if (!isInitialized) return;
