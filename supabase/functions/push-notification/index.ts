@@ -10,7 +10,7 @@ async function getAccessToken(serviceAccountJsonStr: string) {
     iss: serviceAccount.client_email,
     scope: "https://www.googleapis.com/auth/firebase.messaging",
     aud: "https://oauth2.googleapis.com/token",
-    exp: getNumericDate(3600), 
+    exp: getNumericDate(3600),
     iat: getNumericDate(0),
   };
 
@@ -69,7 +69,7 @@ serve(async (req) => {
     if (table === "teams" && type === "INSERT") {
       pushTitle = "NEW MISSION AVAILABLE //";
       pushBody = `A new project '${record.project_name.toUpperCase()}' was just launched in the Arena.`;
-      targetRoute = `dossier?id=${record.id}`;
+      targetRoute = `/dossier?id=${record.id}`;
 
       const { data: users } = await supabase
         .from("users")
@@ -83,9 +83,7 @@ serve(async (req) => {
           }
         });
       }
-    }
-
-    else if (table === "swipes") {
+    } else if (table === "swipes") {
       let targetUserId = null;
 
       if (type === "INSERT" && record.status === "pending") {
@@ -104,7 +102,7 @@ serve(async (req) => {
         targetUserId = team?.founder_id;
         pushTitle = "INBOUND SIGNAL //";
         pushBody = `@${profile?.github_handle || "Unknown"} applied to join ${team?.project_name?.toUpperCase()}.`;
-        targetRoute = "/(drawer)/(tabs)/inbound";
+        targetRoute = "/inbound";
       } else if (type === "UPDATE" && record.status !== old_record?.status) {
         const { data: team } = await supabase
           .from("teams")
@@ -113,7 +111,7 @@ serve(async (req) => {
           .single();
 
         targetUserId = record.swiper_id;
-        targetRoute = "/(drawer)/outbound";
+        targetRoute = "/outbound";
 
         if (record.status === "accepted") {
           pushTitle = "UPLINK SECURED //";
@@ -163,6 +161,7 @@ serve(async (req) => {
           },
           data: {
             route: targetRoute,
+            url: targetRoute,
           },
         },
       };
