@@ -28,7 +28,7 @@ Built using **React Native (Expo)** with a **Supabase backend**, it combines:
 - Real-time data sync
 - Serverless AI-driven profile generation
 
-This is not just a UI project — it demonstrates **scalable architecture, real-time systems, and edge computing integration**.
+This is not just a UI project, it demonstrates **scalable architecture, real-time systems, and edge computing integration**.
 
 ---
 
