@@ -183,15 +183,26 @@
       <li><strong>Google Play Services / Firebase:</strong> Utilized exclusively for routing and delivering secure push notifications to your device hardware.</li>
     </ul>
 
-    <h2>4. Data Retention and Deletion (Burn Protocol)</h2>
-    <p>You retain absolute control over your digital footprint within Loop. You may terminate your session and permanently expunge your data at any time via the <strong>"Delete Account"</strong> function located in your profile settings.</p>
-    <p>Initiating this protocol triggers a complete database wipe of your identity. It permanently deletes your user profile, technical assessments, vector embeddings, active project postings, and swipe history from our Supabase servers. Push notification tokens are actively destroyed upon standard logout or account deletion to prevent phantom transmissions.</p>
+    <h2 id="deletion">4. Data Retention and Deletion (Burn Protocol)</h2>
+    <p>You retain absolute control over your digital footprint within Loop. You can delete your data using either of the following methods:</p>
+    
+    <p><strong>Method 1: In-App Deletion (Instant)</strong><br>
+    Navigate to your Profile settings within the Loop app and execute the "Delete Account" function. This will immediately and permanently expunge your user profile, technical assessments, vector embeddings, active project postings, and swipe history from our Supabase servers. Push notification tokens are actively destroyed.</p>
+    
+    <p><strong>Method 2: Web Deletion Request (If App is Uninstalled)</strong><br>
+    If you no longer have the app installed and wish to purge your data, you may submit a manual deletion request. Email the developer directly at <strong>devanshgupta09072004@gmail.com</strong> with the subject line "DATA DELETION REQUEST". Include your exact GitHub handle in the email body. Your data will be manually expunged from our database within 7 days.</p>
 
     <h2>5. Security Protocols</h2>
     <p>We employ strict security measures to protect your telemetry. All network traffic is encrypted over HTTPS. Database interactions are protected by stringent Row Level Security (RLS) policies within Supabase, ensuring that users can only access or modify data authorized for their specific clearance level (e.g., founders modifying their own teams, users viewing matched profiles).</p>
 
-    <h2>6. Children's Privacy</h2>
-    <p>The Loop network is designed strictly for adult developers and university students. We do not knowingly collect personally identifiable information from anyone under the age of 13 (or 16 in certain jurisdictions). If you are a parent or guardian and believe your child has provided us with personal data, please contact us immediately so we can execute a data purge.</p>
+    <h2 id="csae">7. Child Safety and Exploitation Standards</h2>
+    <p>Loop is committed to the protection of minors. We strictly prohibit the use of our platform for any activities related to Child Sexual Abuse and Exploitation (CSAE). We maintain a zero-tolerance policy regarding:</p>
+    <ul>
+      <li>The generation, distribution, or promotion of child sexual abuse material (CSAM).</li>
+      <li>The exploitation, solicitation, or grooming of minors.</li>
+      <li>Any content that depicts or encourages violence against minors.</li>
+    </ul>
+    <p>We actively monitor platform activity for indicators of exploitation. Any account found to be involved in the abuse or exploitation of a minor will be permanently terminated, all associated data will be purged, and we will report such activity to the appropriate law enforcement authorities and the National Center for Missing & Exploited Children (NCMEC) where applicable.</p>
 
     <h2>7. Changes to this Privacy Policy</h2>
     <p>We may update this Privacy Policy periodically to reflect changes in our backend architecture, third-party integrations, or legal obligations. We will notify you of any significant changes by updating the "Effective Date" at the top of this document and, where appropriate, through an in-app notification.</p>

@@ -1,5 +1,6 @@
 import "react-native-gesture-handler";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { Stack, useRouter, useSegments, Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
@@ -10,6 +11,32 @@ import { supabase } from "../lib/supabase";
 import { CustomAlert } from "../components/CustomAlert";
 import { useNetworkStore } from "../store/useNetworkStore";
 import { NetworkBanner } from "../components/NetworkBanner";
+
+async function setupNotificationChannels() {
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("mission-channel", {
+      name: "New Missions",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "mission.mp3",
+    });
+    await Notifications.setNotificationChannelAsync("inbound-channel", {
+      name: "Inbound Applications",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "inbound.mp3",
+    });
+    await Notifications.setNotificationChannelAsync("accepted-channel", {
+      name: "Mission Accepted",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "accepted.mp3",
+    });
+    await Notifications.setNotificationChannelAsync("rejected-channel", {
+      name: "Mission Rejected",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "rejected.mp3",
+    });
+  }
+}
+setupNotificationChannels();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

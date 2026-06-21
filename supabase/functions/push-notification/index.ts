@@ -64,12 +64,16 @@ serve(async (req) => {
     let pushTitle = "";
     let pushBody = "";
     let targetRoute = "";
+    let channelId = "default";
+    let soundFile = "default";
     let tokens: string[] = [];
 
     if (table === "teams" && type === "INSERT") {
       pushTitle = "NEW MISSION AVAILABLE //";
       pushBody = `A new project '${record.project_name.toUpperCase()}' was just launched in the Arena.`;
       targetRoute = `/dossier?id=${record.id}`;
+      channelId = "mission-channel";
+      soundFile = "mission.mp3";
 
       const { data: users } = await supabase
         .from("users")
@@ -103,6 +107,8 @@ serve(async (req) => {
         pushTitle = "INBOUND SIGNAL //";
         pushBody = `@${profile?.github_handle || "Unknown"} applied to join ${team?.project_name?.toUpperCase()}.`;
         targetRoute = "/inbound";
+        channelId = "inbound-channel";
+        soundFile = "inbound.mp3";
       } else if (type === "UPDATE" && record.status !== old_record?.status) {
         const { data: team } = await supabase
           .from("teams")
@@ -116,9 +122,13 @@ serve(async (req) => {
         if (record.status === "accepted") {
           pushTitle = "UPLINK SECURED //";
           pushBody = `Your deployment to ${team?.project_name?.toUpperCase()} was APPROVED.`;
+          channelId = "accepted-channel";
+          soundFile = "accepted.mp3";
         } else if (record.status === "rejected") {
           pushTitle = "SIGNAL VOID //";
           pushBody = `Your application to ${team?.project_name?.toUpperCase()} was DENIED.`;
+          channelId = "rejected-channel";
+          soundFile = "rejected.mp3";
         } else {
           return new Response("Status ignored", { status: 200 });
         }
@@ -162,6 +172,12 @@ serve(async (req) => {
           data: {
             route: targetRoute,
             url: targetRoute,
+          },
+          android: {
+            notification: {
+              channel_id: channelId,
+              sound: soundFile.replace(".mp3", ""),
+            },
           },
         },
       };

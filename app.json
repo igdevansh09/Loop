@@ -55,7 +55,20 @@
           "backgroundColor": "#111111"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#EAB308",
+          "sounds": [
+            "./assets/sounds/mission.mp3",
+            "./assets/sounds/inbound.mp3",
+            "./assets/sounds/accepted.mp3",
+            "./assets/sounds/rejected.mp3"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
