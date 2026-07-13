@@ -34,8 +34,14 @@ This is not just a UI project, it demonstrates **scalable architecture, real-tim
 
 ## 🚀 Demo
 
-- 📱 APK: https://github.com/igdevansh09/Loop/releases/download/apps/Loop.apk
-- 🎥 Demo Video: https://youtube.com/shorts/17AIQpRHrjc?si=t6pLO01wU0ib4SO1
+🎥 **Watch Demo (Recommended First):**  
+👉 https://youtube.com/shorts/8DR-uTVp00Q?si=oQkI-qy-uLt4wEIb  
+
+<a href="https://play.google.com/store/apps/details?id=com.igdevansh.loop" target="_blank">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" 
+         alt="Get it on Google Play" 
+         width="200"/>
+</a>
 
 ---
 
