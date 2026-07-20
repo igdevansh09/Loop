@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.05)",
     marginBottom: 15,
+    marginTop: 20
   },
   iconBox: {
     backgroundColor: COLORS.primary,
