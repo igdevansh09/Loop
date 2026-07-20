@@ -39,7 +39,6 @@ export default function RulesModal({ visible, onClose }: RulesModalProps) {
             </View>
           </View>
 
-          {/* SCROLLABLE BODY */}
           <ScrollView
             style={styles.scrollArea}
             showsVerticalScrollIndicator={true}

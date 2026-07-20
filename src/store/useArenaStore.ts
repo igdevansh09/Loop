@@ -40,7 +40,7 @@ export const useArenaStore = create<ArenaState>()(
           console.log(
             "SYSTEM OFFLINE: Bypassing fetchMatches, utilizing local cache.",
           );
-          set({ isLoading: false }); // Drop loading state if we are relying on cache
+          set({ isLoading: false });
           return;
         }
 

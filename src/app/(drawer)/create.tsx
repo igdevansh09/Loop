@@ -16,7 +16,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useLaunchStore } from "../../store/useLaunchStore";
-
 import { useAlertStore } from "../../store/useAlertStore";
 
 const springConfig = { damping: 15, stiffness: 100 };
@@ -249,7 +248,7 @@ export default function CreateTeamScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       showAlert(
         "SIGNAL REJECTED",
-        "Description too short. Explain the architecture.",
+        "Description too short. Minimum 50 characters are required",
         "error",
       );
       return;
@@ -399,7 +398,7 @@ export default function CreateTeamScreen() {
           <TerminalInput
             multiline
             autoExpand
-            placeholder="React Native frontend, Go microservices..."
+            placeholder="(min. 50 chars) e.g.React Native frontend, Go microservices..."
             value={description}
             onChangeText={(val: string) => setField("description", val)}
           />

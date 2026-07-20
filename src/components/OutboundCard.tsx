@@ -133,6 +133,8 @@ export const OutboundCard = ({ item, onAction }: OutboundCardProps) => {
   );
 };
 
+
+
 const styles = StyleSheet.create({
   hudBox: {
     backgroundColor: "rgba(0,0,0,0.4)",

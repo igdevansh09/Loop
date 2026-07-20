@@ -1,18 +1,19 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  Linking as RNLinking,
-  Share,
-  ScrollView,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { COLORS } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React from "react";
+import {
+  Dimensions,
+  Linking as RNLinking,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { COLORS } from "../constants/theme";
 
 const { height } = Dimensions.get("window");
 
